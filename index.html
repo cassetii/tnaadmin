@@ -1158,8 +1158,8 @@
         // ===== LOAD DATA FROM FIREBASE =====
         async function loadAllData() {
             try {
-                // Load Pegawai
-                const pegawaiSnap = await db.collection('pegawai').limit(500).get();
+                // Load Pegawai (tanpa limit - ambil semua)
+                const pegawaiSnap = await db.collection('pegawai').get();
                 const pegawaiData = [];
                 pegawaiSnap.forEach(doc => pegawaiData.push({ id: doc.id, ...doc.data() }));
                 
@@ -1175,8 +1175,8 @@
                     </tr>
                 `).join('') || '<tr><td colspan="4" style="text-align:center;padding:2rem;">Belum ada data</td></tr>';
                 
-                // Load Jabatan
-                const jabatanSnap = await db.collection('jabatan').limit(500).get();
+                // Load Jabatan (tanpa limit - ambil semua)
+                const jabatanSnap = await db.collection('jabatan').get();
                 const jabatanData = [];
                 jabatanSnap.forEach(doc => jabatanData.push({ id: doc.id, ...doc.data() }));
                 
@@ -1194,8 +1194,8 @@
                     </tr>
                 `).join('') || '<tr><td colspan="6" style="text-align:center;padding:2rem;">Belum ada data</td></tr>';
                 
-                // Load Modul
-                const modulSnap = await db.collection('modul').limit(500).get();
+                // Load Modul (tanpa limit - ambil semua)
+                const modulSnap = await db.collection('modul').get();
                 const modulData = [];
                 modulSnap.forEach(doc => modulData.push({ id: doc.id, ...doc.data() }));
                 
