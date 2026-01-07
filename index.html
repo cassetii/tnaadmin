@@ -894,7 +894,12 @@
                     
                     if (!noOutline || noOutline === 'nan') continue;
                     
-                    const jabId = noOutline.replace(/\./g, '-');
+                    // Sanitize jabId - remove problematic characters
+                    const jabId = noOutline
+                        .replace(/\./g, '-')
+                        .replace(/\//g, '-')
+                        .replace(/\\/g, '-')
+                        .replace(/\s+/g, '_');
                     
                     // Collect modul wajib (X) and opsional (XO)
                     const softWajib = [];
@@ -1064,13 +1069,27 @@
                                 data.created_at = firebase.firestore.FieldValue.serverTimestamp();
                                 break;
                             case 'jabatan':
-                                docId = item.no_outline.replace(/\./g, '-');
+                                // Sanitize: use no_outline, replace problematic characters
+                                docId = (item.no_outline || 'unknown')
+                                    .replace(/\./g, '-')
+                                    .replace(/\//g, '-')
+                                    .replace(/\\/g, '-')
+                                    .replace(/\s+/g, '_')
+                                    .substring(0, 100);
                                 data.created_at = firebase.firestore.FieldValue.serverTimestamp();
                                 break;
                             case 'pegawai':
                                 docId = item.npp;
                                 data.created_at = firebase.firestore.FieldValue.serverTimestamp();
                                 break;
+                        }
+                        
+                        // Final safety check - remove any remaining /
+                        docId = String(docId).replace(/\//g, '-');
+                        
+                        if (!docId || docId === 'unknown') {
+                            console.log('Skipping invalid item:', item);
+                            return;
                         }
                         
                         const ref = db.collection(collection).doc(docId);
