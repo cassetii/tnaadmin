@@ -989,20 +989,48 @@
             const raw = XLSX.utils.sheet_to_json(sheet, { header: 1 });
             
             parsedData = [];
+            let autoId = 1;
             
-            // Data starts from row 7 (index 7)
-            // Columns: 2=No, 3=Nama, 5=NPP, 10=Jabatan, 12=Unit Kerja
-            for (let i = 7; i < raw.length; i++) {
-                const row = raw[i];
+            console.log('Total rows in Excel:', raw.length);
+            
+            // Data starts from row 6 (index 6) - SheetJS indexing
+            // Columns: 3=Nama, 5=NPP part1 (tahun-bulan), 6=NPP part2 (nomor urut), 10=Jabatan, 12=Unit Kerja, 13=Status
+            // NPP LENGKAP = col5 + col6 (contoh: "80 05" + "0538" = "80050538")
+            for (let i = 6; i < raw.length; i++) {
+                const row = raw[i] || [];
                 const nama = row[3] ? String(row[3]).trim() : '';
-                const nppRaw = row[5];
+                const nppPart1 = row[5]; // tahun-bulan: "80 05"
+                const nppPart2 = row[6]; // nomor urut: "0538"
                 const jabatan = row[10] ? String(row[10]).trim() : '';
                 const unit = row[12] ? String(row[12]).trim() : '';
+                const status = row[13] ? String(row[13]).trim() : '';
                 
-                if (!nama || !nppRaw) continue;
+                // Skip empty rows, headers, and summary rows
+                if (!nama) continue;
+                if (nama === 'undefined' || nama === 'nan' || nama === 'NAMA PEGAWAI' || nama === '2') continue;
+                if (nama.includes('Jumlah')) continue;
                 
-                // Clean NPP: "80 05" -> "8005"
-                const npp = String(nppRaw).replace(/\s/g, '').replace('.0', '');
+                // Build full NPP from col5 + col6
+                let npp = '';
+                let tipeKaryawan = 'Kontrak';
+                
+                if (nppPart1 && String(nppPart1).trim() && String(nppPart1) !== 'undefined' && String(nppPart1).trim() !== 'nan') {
+                    // Clean part1: "80 05" -> "8005"
+                    const part1Clean = String(nppPart1).replace(/\s/g, '');
+                    // Clean part2: "0538" -> "538" (remove leading zeros)
+                    let part2Clean = '';
+                    if (nppPart2 && String(nppPart2) !== 'undefined' && String(nppPart2).trim() !== 'nan') {
+                        // Remove leading zeros and any spaces
+                        part2Clean = String(nppPart2).replace(/\s/g, '').replace(/^0+/, '');
+                    }
+                    // Combine: "8005" + "538" = "8005538"
+                    npp = part1Clean + part2Clean;
+                    tipeKaryawan = 'Organik';
+                } else {
+                    // Generate unique ID for kontrak/magang employees without NPP
+                    npp = 'K' + String(autoId).padStart(5, '0');
+                    autoId++;
+                }
                 
                 if (!npp) continue;
                 
@@ -1010,14 +1038,22 @@
                     npp: npp,
                     nama: nama,
                     jabatan: jabatan,
-                    unit_kerja: unit
+                    unit_kerja: unit,
+                    status: status || tipeKaryawan,
+                    tipe: tipeKaryawan
                 });
             }
             
-            showPreview(['NPP', 'Nama', 'Jabatan', 'Unit Kerja'], 
-                parsedData.slice(0, 100).map(p => [p.npp, p.nama, p.jabatan.substring(0, 35), p.unit_kerja]));
+            console.log('Parsed pegawai:', parsedData.length);
             
-            showToast(`${parsedData.length} pegawai berhasil di-parse`, 'success');
+            // Count by type
+            const organik = parsedData.filter(p => p.tipe === 'Organik').length;
+            const kontrak = parsedData.filter(p => p.tipe === 'Kontrak').length;
+            
+            showPreview(['NPP', 'Nama', 'Jabatan', 'Unit Kerja', 'Status'], 
+                parsedData.slice(0, 100).map(p => [p.npp, p.nama.substring(0, 30), p.jabatan.substring(0, 30), p.unit_kerja, p.status]));
+            
+            showToast(`${parsedData.length} pegawai berhasil di-parse (${organik} Organik, ${kontrak} Kontrak/Magang)`, 'success');
         }
         
         // ===== SHOW PREVIEW =====
