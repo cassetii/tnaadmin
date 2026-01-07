@@ -5,12 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TNA Admin - Bank Sulselbar</title>
     
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     
     <!-- SheetJS for Excel parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- TNA Data (dari Excel) -->
+    <script src="./tna-data.js"></script>
     
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -20,111 +33,381 @@
         :root {
             --primary: #0A4D8C;
             --primary-dark: #063A6A;
-            --secondary: #D4A84B;
+            --primary-light: #1E6FBA;
+            --secondary: #9BC63B;
+            --secondary-light: #B5D85A;
+            --accent: #00B4D8;
+            --dark: #1A1A2E;
+            --light: #F8FAFC;
             --success: #10B981;
             --warning: #F59E0B;
             --danger: #EF4444;
             --info: #3B82F6;
-            --dark: #1A1A2E;
+            --gray-50: #F9FAFB;
             --gray-100: #F1F5F9;
             --gray-200: #E2E8F0;
             --gray-300: #CBD5E1;
+            --gray-400: #94A3B8;
             --gray-500: #64748B;
             --gray-600: #475569;
             --gray-700: #334155;
+            --gray-800: #1E293B;
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            --gradient-secondary: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-light) 100%);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
         }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: var(--gray-100);
             min-height: 100vh;
         }
-        
-        .header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            padding: 1.5rem 2rem;
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--dark);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
             display: flex;
             align-items: center;
             gap: 1rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        
-        .header img {
+
+        .sidebar-logo {
             width: 50px;
             height: 50px;
-            border-radius: 10px;
-            background: white;
-            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        
-        .header h1 {
-            font-size: 1.5rem;
+
+        .sidebar-logo img {
+            width: 50px;
+            height: auto;
+        }
+
+        .sidebar-brand {
+            color: white;
+        }
+
+        .sidebar-brand h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .sidebar-brand p {
+            font-size: 0.75rem;
+            color: var(--gray-400);
+            margin: 0;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 1.5rem 0;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-title {
+            padding: 0 1.5rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            padding: 0.875rem 1.5rem;
+            color: var(--gray-400);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(10, 77, 140, 0.3);
+            color: white;
+            border-left-color: var(--secondary);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            background: var(--danger);
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-secondary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
             font-weight: 700;
         }
-        
-        .header p {
-            font-size: 0.85rem;
-            opacity: 0.9;
+
+        .user-info {
+            flex: 1;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+
+        .user-info .name {
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-info .role {
+            color: var(--gray-400);
+            font-size: 0.75rem;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .main-header {
+            height: var(--header-height);
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--gray-600);
+            cursor: pointer;
+        }
+
+        .page-title h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .page-title p {
+            font-size: 0.85rem;
+            color: var(--gray-500);
+            margin: 0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-btn {
+            width: 42px;
+            height: 42px;
+            background: var(--gray-100);
+            border: none;
+            border-radius: 10px;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .header-btn:hover {
+            background: var(--gray-200);
+            color: var(--primary);
+        }
+
+        .header-btn .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-content {
             padding: 2rem;
         }
-        
+
+        /* ===== DASHBOARD CARDS ===== */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
-        
+
         .stat-card {
             background: white;
             border-radius: 16px;
             padding: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
-        
-        .stat-card .icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .stat-card.primary::before { background: var(--primary); }
+        .stat-card.success::before { background: var(--success); }
+        .stat-card.warning::before { background: var(--warning); }
+        .stat-card.info::before { background: var(--info); }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
-            margin-bottom: 1rem;
+            color: white;
         }
-        
-        .stat-card .icon.blue { background: #EBF5FF; color: var(--info); }
-        .stat-card .icon.green { background: #ECFDF5; color: var(--success); }
-        .stat-card .icon.yellow { background: #FFFBEB; color: var(--warning); }
-        .stat-card .icon.purple { background: #F3E8FF; color: #8B5CF6; }
-        
-        .stat-card h3 {
-            font-size: 2rem;
+
+        .stat-card.primary .stat-icon { background: var(--gradient-primary); }
+        .stat-card.success .stat-icon { background: linear-gradient(135deg, #10B981, #34D399); }
+        .stat-card.warning .stat-icon { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
+        .stat-card.info .stat-icon { background: linear-gradient(135deg, #3B82F6, #60A5FA); }
+
+        .stat-content h3 {
+            font-size: 1.75rem;
             font-weight: 700;
             color: var(--dark);
+            margin: 0;
         }
-        
-        .stat-card p {
+
+        .stat-content p {
             color: var(--gray-500);
-            font-size: 0.9rem;
+            font-size: 0.875rem;
+            margin: 0;
         }
-        
-        .card {
+
+        .stat-trend {
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .stat-trend .value {
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .stat-trend .value.up { color: var(--success); }
+        .stat-trend .value.down { color: var(--danger); }
+
+        .stat-trend .label {
+            font-size: 0.75rem;
+            color: var(--gray-400);
+        }
+
+        /* ===== CONTENT CARDS ===== */
+        .content-card {
             background: white;
             border-radius: 16px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow-sm);
             margin-bottom: 1.5rem;
-            overflow: hidden;
         }
-        
+
         .card-header {
             padding: 1.25rem 1.5rem;
             border-bottom: 1px solid var(--gray-200);
@@ -132,1112 +415,2384 @@
             align-items: center;
             justify-content: space-between;
         }
-        
-        .card-header h2 {
+
+        .card-header h3 {
+            font-family: 'Space Grotesk', sans-serif;
             font-size: 1.1rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--dark);
+            margin: 0;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
         }
-        
+
+        .card-header h3 i {
+            color: var(--primary);
+        }
+
         .card-body {
             padding: 1.5rem;
         }
-        
-        /* Import Section */
-        .import-tabs {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
+
+        /* ===== TABLE ===== */
+        .table-container {
+            overflow-x: auto;
         }
-        
-        .import-tab {
-            padding: 0.75rem 1.25rem;
-            border: 2px solid var(--gray-200);
-            border-radius: 10px;
-            background: white;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: var(--gray-50);
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-100);
+            font-size: 0.9rem;
+            color: var(--gray-700);
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        .data-table .name-cell {
             display: flex;
             align-items: center;
+            gap: 0.75rem;
+        }
+
+        .data-table .avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-pill.success { background: #D1FAE5; color: #065F46; }
+        .status-pill.warning { background: #FEF3C7; color: #92400E; }
+        .status-pill.danger { background: #FEE2E2; color: #991B1B; }
+        .status-pill.info { background: #DBEAFE; color: #1E40AF; }
+
+        .action-btns {
+            display: flex;
             gap: 0.5rem;
         }
-        
-        .import-tab:hover {
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn.view { background: #DBEAFE; color: #1E40AF; }
+        .action-btn.edit { background: #FEF3C7; color: #92400E; }
+        .action-btn.delete { background: #FEE2E2; color: #991B1B; }
+
+        .action-btn:hover { transform: scale(1.1); }
+
+        /* ===== CHARTS ===== */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            height: 300px;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 12px rgba(10, 77, 140, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10B981, #34D399);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--gray-300);
+            color: var(--gray-600);
+        }
+
+        .btn-outline:hover {
             border-color: var(--primary);
             color: var(--primary);
         }
-        
-        .import-tab.active {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
         }
-        
-        .import-tab .badge {
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--gray-100);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
             background: var(--gray-200);
-            color: var(--gray-600);
-            padding: 0.2rem 0.5rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
         }
-        
-        .import-tab.active .badge {
-            background: rgba(255,255,255,0.2);
-            color: white;
+
+        .modal-body {
+            padding: 1.5rem;
+            max-height: 60vh;
+            overflow-y: auto;
         }
-        
-        .drop-zone {
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        /* ===== FORM ===== */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(10, 77, 140, 0.1);
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748B' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* ===== TOOLBAR ===== */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-input i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+        }
+
+        .search-input input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* ===== FILE UPLOAD ===== */
+        .file-upload-zone {
             border: 2px dashed var(--gray-300);
             border-radius: 16px;
-            padding: 3rem 2rem;
+            padding: 3rem;
             text-align: center;
-            transition: all 0.3s;
             cursor: pointer;
-            background: var(--gray-100);
+            transition: all 0.3s ease;
         }
-        
-        .drop-zone:hover, .drop-zone.dragover {
+
+        .file-upload-zone:hover {
             border-color: var(--primary);
-            background: #EBF5FF;
+            background: var(--gray-50);
         }
-        
-        .drop-zone i {
+
+        .file-upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(10, 77, 140, 0.05);
+        }
+
+        .file-upload-zone input {
+            display: none;
+        }
+
+        .file-upload-zone .icon {
             font-size: 3rem;
             color: var(--gray-400);
             margin-bottom: 1rem;
         }
-        
-        .drop-zone h4 {
-            color: var(--gray-700);
+
+        .file-upload-zone h4 {
+            color: var(--dark);
             margin-bottom: 0.5rem;
         }
-        
-        .drop-zone p {
+
+        .file-upload-zone p {
             color: var(--gray-500);
             font-size: 0.9rem;
         }
-        
-        .file-info {
-            display: none;
-            background: #ECFDF5;
-            border: 1px solid var(--success);
-            border-radius: 12px;
+
+        /* ===== IMPORT PREVIEW ===== */
+        .import-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-item {
+            background: var(--gray-50);
             padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .summary-item .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .summary-item .label {
+            font-size: 0.8rem;
+            color: var(--gray-500);
+        }
+
+        .import-preview {
+            max-height: 400px;
+            overflow: auto;
+            border: 1px solid var(--gray-200);
+            border-radius: 10px;
+        }
+
+        /* ===== PAGINATION ===== */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 0;
+            border-top: 1px solid var(--gray-200);
             margin-top: 1rem;
         }
-        
-        .file-info.show {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .file-info i {
-            font-size: 2rem;
-            color: var(--success);
-        }
-        
-        .file-info .details h5 {
-            color: var(--dark);
-            font-weight: 600;
-        }
-        
-        .file-info .details p {
-            color: var(--gray-500);
+
+        .pagination-info {
             font-size: 0.85rem;
+            color: var(--gray-500);
         }
-        
-        /* Preview Table */
-        .preview-section {
-            display: none;
-            margin-top: 1.5rem;
-        }
-        
-        .preview-section.show {
-            display: block;
-        }
-        
-        .preview-header {
+
+        .pagination-btns {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
+            gap: 0.25rem;
         }
-        
-        .preview-header h4 {
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .table-wrapper {
-            overflow-x: auto;
+
+        .page-btn {
+            width: 36px;
+            height: 36px;
             border: 1px solid var(--gray-200);
-            border-radius: 12px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 0.9rem;
         }
-        
-        th, td {
-            padding: 0.75rem 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--gray-200);
+
+        .page-btn:hover {
+            background: var(--gray-50);
         }
-        
-        th {
-            background: var(--gray-100);
+
+        .page-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* ===== LOADING ===== */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== PAGE SECTIONS ===== */
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        /* ===== TOAST ===== */
+        .toast-container {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 99999;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .toast.success i { color: var(--success); }
+        .toast.error i { color: var(--danger); }
+        .toast.warning i { color: var(--warning); }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--gray-500);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--gray-300);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h4 {
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        /* ===== TABS ===== */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--gray-200);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.875rem 1.5rem;
+            background: none;
+            border: none;
+            font-size: 0.9rem;
             font-weight: 600;
-            color: var(--gray-700);
+            color: var(--gray-500);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+        }
+
+        .tab-btn.active::after {
+            transform: scaleX(1);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-input {
+                min-width: 100%;
+            }
+        }
+
+        /* Progress Ring */
+        .progress-ring {
+            width: 120px;
+            height: 120px;
+            position: relative;
+        }
+
+        .progress-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 8;
+        }
+
+        .progress-ring .bg {
+            stroke: var(--gray-200);
+        }
+
+        .progress-ring .progress {
+            stroke: var(--primary);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .progress-ring .value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        /* Mapping Matrix */
+        .matrix-table {
+            overflow-x: auto;
+        }
+
+        .matrix-table table {
+            min-width: 100%;
+            font-size: 0.8rem;
+        }
+
+        .matrix-table th, .matrix-table td {
+            padding: 0.5rem;
+            text-align: center;
+            border: 1px solid var(--gray-200);
+            min-width: 40px;
+        }
+
+        .matrix-table th {
+            background: var(--gray-100);
             position: sticky;
             top: 0;
         }
-        
-        tr:hover {
+
+        .matrix-table .row-header {
+            position: sticky;
+            left: 0;
             background: var(--gray-100);
+            text-align: left;
+            min-width: 200px;
         }
-        
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            display: inline-flex;
+
+        .matrix-check {
+            color: var(--success);
+        }
+
+        .matrix-optional {
+            color: var(--warning);
+        }
+
+        /* Initialize Firebase */
+        .init-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            color: white;
+            margin-bottom: 1.5rem;
+        }
+
+        .init-card h4 {
+            margin: 0 0 0.5rem 0;
+            display: flex;
             align-items: center;
             gap: 0.5rem;
-            transition: all 0.2s;
         }
-        
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: var(--primary-dark);
-        }
-        
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background: #059669;
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        /* Progress */
-        .progress-section {
-            display: none;
-            margin-top: 1.5rem;
-        }
-        
-        .progress-section.show {
-            display: block;
-        }
-        
-        .progress-bar-container {
-            background: var(--gray-200);
-            border-radius: 10px;
-            height: 12px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
-        
-        .progress-bar {
-            background: linear-gradient(90deg, var(--primary), var(--info));
-            height: 100%;
-            width: 0%;
-            transition: width 0.3s;
-            border-radius: 10px;
-        }
-        
-        .progress-text {
-            text-align: center;
-            color: var(--gray-600);
+
+        .init-card p {
+            margin: 0 0 1rem 0;
+            opacity: 0.9;
             font-size: 0.9rem;
         }
-        
-        /* Alert */
-        .alert {
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .alert-info {
-            background: #EBF5FF;
-            color: var(--info);
-            border: 1px solid var(--info);
-        }
-        
-        .alert-success {
-            background: #ECFDF5;
-            color: var(--success);
-            border: 1px solid var(--success);
-        }
-        
-        .alert-danger {
-            background: #FEF2F2;
-            color: var(--danger);
-            border: 1px solid var(--danger);
-        }
-        
-        .pill {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-        
-        .pill-info { background: #EBF5FF; color: var(--info); }
-        .pill-success { background: #ECFDF5; color: var(--success); }
-        .pill-warning { background: #FFFBEB; color: var(--warning); }
-        
-        /* Toast */
-        .toast-container {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 9999;
-        }
-        
-        .toast {
+
+        .init-card .btn {
             background: white;
-            padding: 1rem 1.5rem;
+            color: var(--primary);
+        }
+
+        .init-progress {
+            background: rgba(255,255,255,0.2);
             border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            margin-bottom: 0.5rem;
+            height: 8px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .init-progress .bar {
+            background: white;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Dashboard Summary Card */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-card {
+            background: var(--gray-50);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .summary-card .icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-primary);
+            border-radius: 10px;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            animation: slideIn 0.3s ease;
-        }
-        
-        .toast.success { border-left: 4px solid var(--success); }
-        .toast.error { border-left: 4px solid var(--danger); }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        /* Data Tables */
-        .data-section {
-            display: none;
-        }
-        
-        .data-section.active {
-            display: block;
-        }
-        
-        .nav-tabs {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            border-bottom: 2px solid var(--gray-200);
-            padding-bottom: 0.5rem;
-        }
-        
-        .nav-tab {
-            padding: 0.75rem 1.25rem;
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-weight: 500;
-            color: var(--gray-500);
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-        
-        .nav-tab:hover {
-            background: var(--gray-100);
-            color: var(--dark);
-        }
-        
-        .nav-tab.active {
-            background: var(--primary);
+            justify-content: center;
             color: white;
+            margin: 0 auto 0.75rem;
         }
-        
-        .search-box {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
+
+        .summary-card h4 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
         }
-        
-        .search-box input {
-            flex: 1;
-            padding: 0.75rem 1rem;
-            border: 1px solid var(--gray-300);
-            border-radius: 10px;
-            font-size: 0.95rem;
-        }
-        
-        .search-box input:focus {
-            outline: none;
-            border-color: var(--primary);
+
+        .summary-card p {
+            font-size: 0.8rem;
+            color: var(--gray-500);
+            margin: 0;
         }
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
-    
-    <header class="header">
-        <img src="./logo.png" alt="Bank Sulselbar">
-        <div>
-            <h1>TNA Admin Dashboard</h1>
-            <p>Training Need Analysis - Bank Sulselbar</p>
-        </div>
-    </header>
-    
-    <div class="container">
-        <!-- Stats -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="icon blue"><i class="fas fa-users"></i></div>
-                <h3 id="statPegawai">0</h3>
-                <p>Total Pegawai</p>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="./logo_bssb_outline_putih.png" alt="Bank Sulselbar">
             </div>
-            <div class="stat-card">
-                <div class="icon green"><i class="fas fa-sitemap"></i></div>
-                <h3 id="statJabatan">0</h3>
-                <p>Total Jabatan</p>
-            </div>
-            <div class="stat-card">
-                <div class="icon yellow"><i class="fas fa-book"></i></div>
-                <h3 id="statModul">0</h3>
-                <p>Total Modul</p>
-            </div>
-            <div class="stat-card">
-                <div class="icon purple"><i class="fas fa-check-circle"></i></div>
-                <h3 id="statSubmission">0</h3>
-                <p>Submission TNA</p>
+            <div class="sidebar-brand">
+                <h2>TNA Admin</h2>
+                <p>Bank Sulselbar 2026</p>
             </div>
         </div>
-        
-        <!-- Import Section -->
-        <div class="card">
-            <div class="card-header">
-                <h2><i class="fas fa-file-import"></i> Import Data dari Excel</h2>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Menu Utama</div>
+                <div class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item" data-page="submissions">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Submissions</span>
+                    <span class="badge" id="submissionBadge">0</span>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i>
-                    <div>
-                        <strong>Urutan Import:</strong> 
-                        1. Import Modul dulu → 2. Import Jabatan (Matrix) → 3. Import Pegawai
-                    </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Master Data</div>
+                <div class="nav-item" data-page="pegawai">
+                    <i class="fas fa-users"></i>
+                    <span>Data Pegawai</span>
                 </div>
-                
-                <!-- Import Tabs -->
-                <div class="import-tabs">
-                    <button class="import-tab active" data-type="modul" onclick="selectImportType('modul')">
-                        <i class="fas fa-book"></i> Data Modul
-                        <span class="badge">Kode_Modul.xlsx</span>
-                    </button>
-                    <button class="import-tab" data-type="jabatan" onclick="selectImportType('jabatan')">
-                        <i class="fas fa-sitemap"></i> Data Jabatan + Matrix
-                        <span class="badge">TNA_2026.xlsx</span>
-                    </button>
-                    <button class="import-tab" data-type="pegawai" onclick="selectImportType('pegawai')">
-                        <i class="fas fa-users"></i> Data Pegawai
-                        <span class="badge">Database_202511.xlsx</span>
-                    </button>
+                <div class="nav-item" data-page="jabatan">
+                    <i class="fas fa-sitemap"></i>
+                    <span>Data Jabatan</span>
                 </div>
-                
-                <!-- Drop Zone -->
-                <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-                    <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" onchange="handleFileSelect(event)">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <h4>Drag & Drop file Excel di sini</h4>
-                    <p>atau klik untuk memilih file</p>
-                    <p style="margin-top: 0.5rem; font-size: 0.8rem;" id="expectedFile">File yang diharapkan: <strong>Kode_Modul.xlsx</strong></p>
+                <div class="nav-item" data-page="modul">
+                    <i class="fas fa-book"></i>
+                    <span>Data Modul</span>
                 </div>
-                
-                <!-- File Info -->
-                <div class="file-info" id="fileInfo">
-                    <i class="fas fa-file-excel"></i>
-                    <div class="details">
-                        <h5 id="fileName">-</h5>
-                        <p id="fileSize">-</p>
-                    </div>
-                    <button class="btn btn-danger" onclick="clearFile()" style="margin-left: auto;">
-                        <i class="fas fa-times"></i> Hapus
-                    </button>
+                <div class="nav-item" data-page="mapping">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Mapping Matrix</span>
                 </div>
-                
-                <!-- Preview Section -->
-                <div class="preview-section" id="previewSection">
-                    <div class="preview-header">
-                        <h4><i class="fas fa-table"></i> Preview Data (<span id="previewCount">0</span> rows)</h4>
-                        <button class="btn btn-success" id="btnImport" onclick="importToFirebase()">
-                            <i class="fas fa-upload"></i> Import ke Firebase
-                        </button>
-                    </div>
-                    <div class="table-wrapper">
-                        <table id="previewTable">
-                            <thead id="previewHead"></thead>
-                            <tbody id="previewBody"></tbody>
-                        </table>
-                    </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Tools</div>
+                <div class="nav-item" data-page="import">
+                    <i class="fas fa-file-import"></i>
+                    <span>Import Excel</span>
                 </div>
-                
-                <!-- Progress Section -->
-                <div class="progress-section" id="progressSection">
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" id="progressBar"></div>
-                    </div>
-                    <p class="progress-text" id="progressText">Importing... 0%</p>
+                <div class="nav-item" data-page="export">
+                    <i class="fas fa-file-export"></i>
+                    <span>Export Report</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Pengaturan</div>
+                <div class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Pengaturan</span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <div class="user-avatar">HC</div>
+                <div class="user-info">
+                    <div class="name">Admin HC</div>
+                    <div class="role">Human Capital</div>
                 </div>
             </div>
         </div>
-        
-        <!-- Data View Section -->
-        <div class="card">
-            <div class="card-header">
-                <h2><i class="fas fa-database"></i> Data di Firebase</h2>
-                <button class="btn btn-primary" onclick="loadAllData()">
-                    <i class="fas fa-sync"></i> Refresh
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="page-title">
+                    <h1 id="pageTitle">Dashboard</h1>
+                    <p id="pageSubtitle">Selamat datang di TNA Admin Bank Sulselbar</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="header-btn" onclick="loadDashboard()">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="header-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge" id="notifBadge">0</span>
+                </button>
+                <button class="header-btn">
+                    <i class="fas fa-question-circle"></i>
                 </button>
             </div>
-            <div class="card-body">
-                <div class="nav-tabs">
-                    <button class="nav-tab active" onclick="showDataTab('pegawai')">
-                        <i class="fas fa-users"></i> Pegawai (<span id="countPegawai">0</span>)
-                    </button>
-                    <button class="nav-tab" onclick="showDataTab('jabatan')">
-                        <i class="fas fa-sitemap"></i> Jabatan (<span id="countJabatan">0</span>)
-                    </button>
-                    <button class="nav-tab" onclick="showDataTab('modul')">
-                        <i class="fas fa-book"></i> Modul (<span id="countModul">0</span>)
-                    </button>
-                </div>
-                
-                <div class="search-box">
-                    <input type="text" id="searchData" placeholder="Cari data..." onkeyup="filterData()">
-                </div>
-                
-                <!-- Data Tables -->
-                <div id="dataPegawai" class="data-section active">
-                    <div class="table-wrapper" style="max-height: 500px;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>NPP</th>
-                                    <th>Nama</th>
-                                    <th>Jabatan</th>
-                                    <th>Unit Kerja</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tablePegawai"></tbody>
-                        </table>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <section class="page-section active" id="pageDashboard">
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card primary">
+                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                        <div class="stat-content">
+                            <h3 id="statTotalPegawai">0</h3>
+                            <p>Total Pegawai</p>
+                        </div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-content">
+                            <h3 id="statSubmitted">0</h3>
+                            <p>Sudah Submit</p>
+                        </div>
+                        <div class="stat-trend">
+                            <div class="value up" id="submitPercent">0%</div>
+                            <div class="label">dari total</div>
+                        </div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                        <div class="stat-content">
+                            <h3 id="statPending">0</h3>
+                            <p>Belum Submit</p>
+                        </div>
+                    </div>
+                    <div class="stat-card info">
+                        <div class="stat-icon"><i class="fas fa-book"></i></div>
+                        <div class="stat-content">
+                            <h3 id="statTotalModul">0</h3>
+                            <p>Total Modul</p>
+                        </div>
                     </div>
                 </div>
-                
-                <div id="dataJabatan" class="data-section">
-                    <div class="table-wrapper" style="max-height: 500px;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>No Outline</th>
-                                    <th>Nama Jabatan</th>
-                                    <th>Posisi</th>
-                                    <th>Lokasi</th>
-                                    <th>Modul Soft</th>
-                                    <th>Modul Tech</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tableJabatan"></tbody>
-                        </table>
+
+                <!-- Charts -->
+                <div class="chart-grid">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-bar"></i> Submission per Unit Kerja</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="chartUnitKerja"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-pie"></i> Status Pengisian TNA</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="chartStatus"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <div id="dataModul" class="data-section">
-                    <div class="table-wrapper" style="max-height: 500px;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Kode</th>
-                                    <th>Nama Modul</th>
-                                    <th>Kategori</th>
-                                    <th>Tingkatan</th>
-                                    <th>Jenis</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tableModul"></tbody>
-                        </table>
+
+                <!-- Recent Submissions -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-history"></i> Submission Terbaru</h3>
+                        <button class="btn btn-outline" onclick="navigateTo('submissions')">
+                            Lihat Semua <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Pegawai</th>
+                                        <th>Jabatan</th>
+                                        <th>Unit Kerja</th>
+                                        <th>Modul Dipilih</th>
+                                        <th>Status</th>
+                                        <th>Waktu</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentSubmissions">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Top Modules -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-fire"></i> Modul Paling Dibutuhkan</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Kode</th>
+                                        <th>Nama Modul</th>
+                                        <th>Kategori</th>
+                                        <th>Tingkatan</th>
+                                        <th>Kebutuhan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topModules">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Submissions Page -->
+            <section class="page-section" id="pageSubmissions">
+                <div class="toolbar">
+                    <div class="search-input">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchSubmission" placeholder="Cari berdasarkan nama, NPP, atau jabatan..." onkeyup="filterSubmissions()">
+                    </div>
+                    <select class="form-control form-select" style="width: auto;" id="filterStatus" onchange="filterSubmissions()">
+                        <option value="">Semua Status</option>
+                        <option value="submitted">Sudah Submit</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="exportSubmissions()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-file-alt"></i> Data Submissions (<span id="totalSubmissions">0</span>)</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="checkAll" onchange="toggleCheckAll()"></th>
+                                        <th>Pegawai</th>
+                                        <th>NPP</th>
+                                        <th>Jabatan</th>
+                                        <th>Unit Kerja</th>
+                                        <th>Modul</th>
+                                        <th>Status</th>
+                                        <th>Waktu Submit</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="submissionsTable">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination">
+                            <div class="pagination-info" id="paginationInfo">Menampilkan 0 data</div>
+                            <div class="pagination-btns" id="paginationBtns">
+                                <!-- Pagination buttons -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pegawai Page -->
+            <section class="page-section" id="pagePegawai">
+                <div class="toolbar">
+                    <div class="search-input">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Cari pegawai...">
+                    </div>
+                    <button class="btn btn-success" onclick="openModal('modalAddPegawai')">
+                        <i class="fas fa-plus"></i> Tambah Pegawai
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('modalImport')">
+                        <i class="fas fa-file-import"></i> Import Excel
+                    </button>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-users"></i> Data Pegawai</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>NPP</th>
+                                        <th>Nama</th>
+                                        <th>Jabatan</th>
+                                        <th>Posisi</th>
+                                        <th>Unit Kerja</th>
+                                        <th>Level</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pegawaiTable">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Jabatan Page -->
+            <section class="page-section" id="pageJabatan">
+                <div class="toolbar">
+                    <div class="search-input">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Cari jabatan...">
+                    </div>
+                    <button class="btn btn-success" onclick="openModal('modalAddJabatan')">
+                        <i class="fas fa-plus"></i> Tambah Jabatan
+                    </button>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-sitemap"></i> Data Jabatan</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>No Outline</th>
+                                        <th>Nama Jabatan</th>
+                                        <th>Posisi</th>
+                                        <th>Lokasi</th>
+                                        <th>Level</th>
+                                        <th>Modul Soft</th>
+                                        <th>Modul Tech</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="jabatanTable">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Modul Page -->
+            <section class="page-section" id="pageModul">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="modulSoft">Soft Competencies</button>
+                    <button class="tab-btn" data-tab="modulTech">Technical Competencies</button>
+                </div>
+
+                <div class="toolbar">
+                    <div class="search-input">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Cari modul...">
+                    </div>
+                    <button class="btn btn-success" onclick="openModal('modalAddModul')">
+                        <i class="fas fa-plus"></i> Tambah Modul
+                    </button>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-book"></i> Data Modul</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Kode</th>
+                                        <th>Nama Modul</th>
+                                        <th>Kategori</th>
+                                        <th>Tingkatan</th>
+                                        <th>Tujuan</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modulTable">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mapping Page -->
+            <section class="page-section" id="pageMapping">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-project-diagram"></i> Matrix Jabatan vs Modul</h3>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <select class="form-control form-select" style="width: auto;" id="mappingType">
+                                <option value="soft">Soft Competencies</option>
+                                <option value="tech">Technical Competencies</option>
+                            </select>
+                            <button class="btn btn-outline" onclick="openModal('modalImport')">
+                                <i class="fas fa-file-import"></i> Import Matrix
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="matrix-table" id="matrixContainer">
+                            <!-- Matrix will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Import Page -->
+            <section class="page-section" id="pageImport">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-file-import"></i> Import Data dari Excel</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="tabs">
+                            <button class="tab-btn active" data-import="pegawai">Data Pegawai</button>
+                            <button class="tab-btn" data-import="jabatan">Data Jabatan</button>
+                            <button class="tab-btn" data-import="modul">Data Modul</button>
+                            <button class="tab-btn" data-import="matrix">Matrix Mapping</button>
+                        </div>
+
+                        <div class="file-upload-zone" id="dropZone">
+                            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+                            <div class="icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <h4>Drag & Drop file Excel di sini</h4>
+                            <p>atau klik untuk memilih file (.xlsx, .xls, .csv)</p>
+                        </div>
+
+                        <div id="importPreview" style="display: none;">
+                            <div class="import-summary" id="importSummary">
+                                <!-- Summary will appear here -->
+                            </div>
+                            <div class="import-preview" id="previewTable">
+                                <!-- Preview table will appear here -->
+                            </div>
+                            <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                                <button class="btn btn-outline" onclick="cancelImport()">
+                                    <i class="fas fa-times"></i> Batal
+                                </button>
+                                <button class="btn btn-success" onclick="confirmImport()">
+                                    <i class="fas fa-check"></i> Import Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Import Guide -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-info-circle"></i> Panduan Import</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info" style="background: #EBF5FF; border: 1px solid #3B82F6; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                            <strong><i class="fas fa-lightbulb"></i> Urutan Import yang Benar:</strong>
+                            <ol style="margin: 0.5rem 0 0 1.5rem;">
+                                <li>Import <strong>Data Modul</strong> terlebih dahulu (file: Kode_Modul.xlsx)</li>
+                                <li>Import <strong>Matrix Mapping</strong> (file: TNA_2026.xlsx)</li>
+                                <li>Import <strong>Data Pegawai</strong> (file: daftar pegawai)</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Export Page -->
+            <section class="page-section" id="pageExport">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-file-export"></i> Export Laporan TNA</h3>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                            <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 12px; text-align: center;">
+                                <i class="fas fa-file-excel" style="font-size: 3rem; color: #10B981; margin-bottom: 1rem;"></i>
+                                <h4>Export Submissions</h4>
+                                <p style="color: var(--gray-500); font-size: 0.9rem; margin-bottom: 1rem;">Download semua data submission pegawai</p>
+                                <button class="btn btn-success" onclick="exportSubmissionsToExcel()">
+                                    <i class="fas fa-download"></i> Download Excel
+                                </button>
+                            </div>
+                            <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 12px; text-align: center;">
+                                <i class="fas fa-chart-bar" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                                <h4>Export Rekap Modul</h4>
+                                <p style="color: var(--gray-500); font-size: 0.9rem; margin-bottom: 1rem;">Download rekap kebutuhan modul per jabatan</p>
+                                <button class="btn btn-primary" onclick="exportModulSummary()">
+                                    <i class="fas fa-download"></i> Download Excel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Page -->
+            <section class="page-section" id="pageSettings">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-database"></i> Initialize Firebase Data</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="summary-cards">
+                            <div class="summary-card">
+                                <div class="icon"><i class="fas fa-book"></i></div>
+                                <h4 id="countModul">0</h4>
+                                <p>Modul Ready</p>
+                            </div>
+                            <div class="summary-card">
+                                <div class="icon"><i class="fas fa-sitemap"></i></div>
+                                <h4 id="countJabatan">0</h4>
+                                <p>Jabatan Ready</p>
+                            </div>
+                            <div class="summary-card">
+                                <div class="icon"><i class="fas fa-users"></i></div>
+                                <h4 id="countPegawai">0</h4>
+                                <p>Pegawai Ready</p>
+                            </div>
+                        </div>
+                        
+                        <div id="initProgress" style="display: none; margin: 1.5rem 0;">
+                            <div class="init-progress">
+                                <div class="bar" id="initProgressBar"></div>
+                            </div>
+                            <p id="initProgressText" style="text-align: center; margin-top: 0.5rem; color: var(--gray-600);"></p>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="initializeFirebaseData('modul')">
+                                <i class="fas fa-upload"></i> Upload Modul
+                            </button>
+                            <button class="btn btn-primary" onclick="initializeFirebaseData('jabatan')">
+                                <i class="fas fa-upload"></i> Upload Jabatan
+                            </button>
+                            <button class="btn btn-success" onclick="initializeFirebaseData('all')">
+                                <i class="fas fa-cloud-upload-alt"></i> Upload Semua
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal Add Pegawai -->
+    <div class="modal-overlay" id="modalAddPegawai">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Tambah Pegawai</h3>
+                <button class="modal-close" onclick="closeModal('modalAddPegawai')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">NPP <span style="color: var(--danger);">*</span></label>
+                        <input type="text" class="form-control" id="inputNPP" placeholder="Masukkan NPP">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nama Lengkap <span style="color: var(--danger);">*</span></label>
+                        <input type="text" class="form-control" id="inputNama" placeholder="Masukkan nama lengkap">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Jabatan <span style="color: var(--danger);">*</span></label>
+                    <select class="form-control form-select" id="inputJabatan">
+                        <option value="">Pilih Jabatan</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Posisi</label>
+                        <input type="text" class="form-control" id="inputPosisi" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Level</label>
+                        <input type="text" class="form-control" id="inputLevel" readonly>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Unit Kerja</label>
+                    <input type="text" class="form-control" id="inputUnitKerja" readonly>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalAddPegawai')">Batal</button>
+                <button class="btn btn-primary" onclick="savePegawai()">
+                    <i class="fas fa-save"></i> Simpan
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- Modal View Submission -->
+    <div class="modal-overlay" id="modalViewSubmission">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>Detail Submission</h3>
+                <button class="modal-close" onclick="closeModal('modalViewSubmission')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="submissionDetail">
+                <!-- Detail will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalViewSubmission')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Import -->
+    <div class="modal-overlay" id="modalImport">
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3>Import Data dari Excel</h3>
+                <button class="modal-close" onclick="closeModal('modalImport')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="file-upload-zone" id="modalDropZone">
+                    <input type="file" id="modalFileInput" accept=".xlsx,.xls,.csv">
+                    <div class="icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <h4>Drag & Drop file Excel di sini</h4>
+                    <p>atau klik untuk memilih file</p>
+                </div>
+                <div id="modalImportPreview" style="display: none;">
+                    <!-- Preview will appear here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalImport')">Batal</button>
+                <button class="btn btn-success" id="btnConfirmImport" style="display: none;" onclick="confirmModalImport()">
+                    <i class="fas fa-check"></i> Import Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    
     <script>
-        // ===== FIREBASE CONFIG =====
+        // ===== FIREBASE CONFIGURATION =====
         const firebaseConfig = {
             apiKey: "AIzaSyBiwuLzJ8lVBsP9UJ4w6HU2JevCF7K8NNk",
             authDomain: "tnahumancapital.firebaseapp.com",
             projectId: "tnahumancapital",
             storageBucket: "tnahumancapital.firebasestorage.app",
             messagingSenderId: "618822378444",
-            appId: "1:618822378444:web:8cd59870928bd251613369"
+            appId: "1:618822378444:web:8cd59870928bd251613369",
+            measurementId: "G-MR5NEYYE07"
         };
-        
+
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        
-        // ===== STATE =====
-        let currentImportType = 'modul';
-        let parsedData = [];
-        let currentFile = null;
-        
-        // ===== TOAST =====
+
+        // ===== GLOBAL DATA =====
+        let allSubmissions = [];
+        let chartUnitKerja = null;
+        let chartStatus = null;
+
+        // ===== UTILITY FUNCTIONS =====
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             toast.innerHTML = `
-                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-exclamation-circle'}"></i>
                 <span>${message}</span>
             `;
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 4000);
         }
-        
-        // ===== IMPORT TYPE SELECTION =====
-        function selectImportType(type) {
-            currentImportType = type;
-            document.querySelectorAll('.import-tab').forEach(tab => {
-                tab.classList.toggle('active', tab.dataset.type === type);
+
+        function formatDate(dateValue) {
+            if (!dateValue) return '-';
+            
+            let date;
+            if (dateValue.toDate) {
+                date = dateValue.toDate();
+            } else if (dateValue.seconds) {
+                date = new Date(dateValue.seconds * 1000);
+            } else {
+                date = new Date(dateValue);
+            }
+            
+            return date.toLocaleDateString('id-ID', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             });
-            
-            const expectedFiles = {
-                modul: 'Kode_Modul.xlsx',
-                jabatan: 'TNA_2026.xlsx',
-                pegawai: 'Database_202511.xlsx'
-            };
-            
-            document.getElementById('expectedFile').innerHTML = 
-                `File yang diharapkan: <strong>${expectedFiles[type]}</strong>`;
-            
-            clearFile();
         }
-        
-        // ===== FILE HANDLING =====
+
+        function getInitials(name) {
+            if (!name) return '??';
+            return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        }
+
+        // ===== NAVIGATION =====
+        function navigateTo(page) {
+            // Update nav
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.page === page);
+            });
+
+            // Update page
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
+
+            // Update title
+            const titles = {
+                dashboard: ['Dashboard', 'Selamat datang di TNA Admin Bank Sulselbar'],
+                submissions: ['Submissions', 'Kelola data pengisian TNA pegawai'],
+                pegawai: ['Data Pegawai', 'Kelola master data pegawai'],
+                jabatan: ['Data Jabatan', 'Kelola master data jabatan'],
+                modul: ['Data Modul', 'Kelola master data modul pelatihan'],
+                mapping: ['Mapping Matrix', 'Kelola mapping jabatan vs modul'],
+                import: ['Import Excel', 'Import data dari file Excel'],
+                export: ['Export Report', 'Export laporan TNA'],
+                settings: ['Pengaturan', 'Konfigurasi sistem TNA']
+            };
+
+            document.getElementById('pageTitle').textContent = titles[page][0];
+            document.getElementById('pageSubtitle').textContent = titles[page][1];
+
+            // Load data for page
+            loadPageData(page);
+        }
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => navigateTo(item.dataset.page));
+        });
+
+        // ===== LOAD DATA =====
+        async function loadPageData(page) {
+            switch(page) {
+                case 'dashboard':
+                    await loadDashboard();
+                    break;
+                case 'submissions':
+                    await loadSubmissions();
+                    break;
+                case 'pegawai':
+                    await loadPegawai();
+                    break;
+                case 'jabatan':
+                    await loadJabatan();
+                    break;
+                case 'modul':
+                    await loadModul();
+                    break;
+                case 'settings':
+                    loadSettings();
+                    break;
+            }
+        }
+
+        // ===== DASHBOARD =====
+        async function loadDashboard() {
+            showLoading();
+            
+            try {
+                // Get submissions from Firebase
+                const submissionsSnap = await db.collection('submissions').orderBy('updated_at', 'desc').get();
+                allSubmissions = [];
+                submissionsSnap.forEach(doc => {
+                    allSubmissions.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Calculate stats
+                const totalPegawai = typeof PEGAWAI_DATA !== 'undefined' ? PEGAWAI_DATA.length : 0;
+                const totalModul = typeof MODUL_DATA !== 'undefined' ? MODUL_DATA.length : 0;
+                const submitted = allSubmissions.filter(s => s.status === 'submitted').length;
+                const pending = totalPegawai - submitted;
+                const percent = totalPegawai > 0 ? Math.round((submitted / totalPegawai) * 100) : 0;
+
+                // Update stats
+                document.getElementById('statTotalPegawai').textContent = totalPegawai.toLocaleString();
+                document.getElementById('statSubmitted').textContent = submitted.toLocaleString();
+                document.getElementById('statPending').textContent = pending.toLocaleString();
+                document.getElementById('statTotalModul').textContent = totalModul.toLocaleString();
+                document.getElementById('submitPercent').textContent = percent + '%';
+                document.getElementById('submissionBadge').textContent = submitted;
+                document.getElementById('notifBadge').textContent = submitted;
+
+                // Load recent submissions table
+                const tbody = document.getElementById('recentSubmissions');
+                if (allSubmissions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--gray-500);"><i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>Belum ada submission</td></tr>';
+                } else {
+                    tbody.innerHTML = allSubmissions.slice(0, 10).map(sub => `
+                        <tr>
+                            <td>
+                                <div class="name-cell">
+                                    <div class="avatar">${getInitials(sub.nama)}</div>
+                                    <div>
+                                        <strong>${sub.nama || '-'}</strong>
+                                        <div style="font-size: 0.8rem; color: var(--gray-500);">${sub.npp || '-'}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${sub.jabatan || '-'}</td>
+                            <td>${sub.unit_kerja || '-'}</td>
+                            <td><strong>${(sub.modul_soft?.length || 0) + (sub.modul_tech?.length || 0)}</strong> modul</td>
+                            <td>
+                                <span class="status-pill ${sub.status === 'submitted' ? 'success' : 'warning'}">
+                                    <i class="fas ${sub.status === 'submitted' ? 'fa-check' : 'fa-clock'}"></i>
+                                    ${sub.status === 'submitted' ? 'Submitted' : 'Draft'}
+                                </span>
+                            </td>
+                            <td style="font-size: 0.85rem; color: var(--gray-500);">${formatDate(sub.updated_at)}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Load top modules
+                loadTopModules();
+
+                // Initialize charts
+                initCharts(submitted, pending);
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showToast('Gagal memuat dashboard: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function loadTopModules() {
+            const modulTbody = document.getElementById('topModules');
+            
+            // Count module usage from submissions
+            const modulCount = {};
+            allSubmissions.forEach(sub => {
+                const allModul = [...(sub.modul_soft || []), ...(sub.modul_tech || [])];
+                allModul.forEach(kode => {
+                    modulCount[kode] = (modulCount[kode] || 0) + 1;
+                });
+            });
+
+            // Sort and get top 10
+            const sortedModul = Object.entries(modulCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            if (sortedModul.length === 0) {
+                // Show default modules from MODUL_DATA
+                if (typeof MODUL_DATA !== 'undefined') {
+                    modulTbody.innerHTML = MODUL_DATA.slice(0, 10).map(mod => `
+                        <tr>
+                            <td><strong>${mod.kode}</strong></td>
+                            <td>${mod.nama}</td>
+                            <td>${mod.kategori}</td>
+                            <td>
+                                <span class="status-pill ${mod.tingkatan === 'Basic' ? 'info' : mod.tingkatan === 'Intermediate' ? 'warning' : 'danger'}">
+                                    ${mod.tingkatan}
+                                </span>
+                            </td>
+                            <td><strong>-</strong></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    modulTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--gray-500);">Belum ada data modul</td></tr>';
+                }
+            } else {
+                modulTbody.innerHTML = sortedModul.map(([kode, count]) => {
+                    const modul = typeof MODUL_DATA !== 'undefined' ? MODUL_DATA.find(m => m.kode === kode) : null;
+                    return `
+                        <tr>
+                            <td><strong>${kode}</strong></td>
+                            <td>${modul?.nama || '-'}</td>
+                            <td>${modul?.kategori || '-'}</td>
+                            <td>
+                                <span class="status-pill ${modul?.tingkatan === 'Basic' ? 'info' : modul?.tingkatan === 'Intermediate' ? 'warning' : 'danger'}">
+                                    ${modul?.tingkatan || '-'}
+                                </span>
+                            </td>
+                            <td><strong>${count}</strong> pegawai</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        function initCharts(submitted, pending) {
+            // Destroy existing charts
+            if (chartUnitKerja) chartUnitKerja.destroy();
+            if (chartStatus) chartStatus.destroy();
+
+            // Group submissions by unit kerja
+            const unitData = {};
+            allSubmissions.forEach(sub => {
+                const unit = sub.unit_kerja || 'Lainnya';
+                if (!unitData[unit]) {
+                    unitData[unit] = { submitted: 0, draft: 0 };
+                }
+                if (sub.status === 'submitted') {
+                    unitData[unit].submitted++;
+                } else {
+                    unitData[unit].draft++;
+                }
+            });
+
+            // Sort by total and get top 10
+            const sortedUnits = Object.entries(unitData)
+                .sort((a, b) => (b[1].submitted + b[1].draft) - (a[1].submitted + a[1].draft))
+                .slice(0, 10);
+
+            // Unit Kerja Chart
+            const ctxUnit = document.getElementById('chartUnitKerja').getContext('2d');
+            chartUnitKerja = new Chart(ctxUnit, {
+                type: 'bar',
+                data: {
+                    labels: sortedUnits.length > 0 ? sortedUnits.map(u => u[0]) : ['Belum ada data'],
+                    datasets: [{
+                        label: 'Sudah Submit',
+                        data: sortedUnits.length > 0 ? sortedUnits.map(u => u[1].submitted) : [0],
+                        backgroundColor: '#10B981',
+                        borderRadius: 6
+                    }, {
+                        label: 'Draft',
+                        data: sortedUnits.length > 0 ? sortedUnits.map(u => u[1].draft) : [0],
+                        backgroundColor: '#F59E0B',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true }
+                    }
+                }
+            });
+
+            // Status Chart
+            const totalPegawai = typeof PEGAWAI_DATA !== 'undefined' ? PEGAWAI_DATA.length : 0;
+            const draft = allSubmissions.filter(s => s.status !== 'submitted').length;
+            const notFilled = Math.max(0, totalPegawai - submitted - draft);
+
+            const ctxStatus = document.getElementById('chartStatus').getContext('2d');
+            chartStatus = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sudah Submit', 'Draft', 'Belum Mengisi'],
+                    datasets: [{
+                        data: [submitted, draft, notFilled],
+                        backgroundColor: ['#10B981', '#F59E0B', '#E2E8F0'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // ===== SUBMISSIONS =====
+        async function loadSubmissions() {
+            showLoading();
+            
+            try {
+                // Get submissions from Firebase
+                const submissionsSnap = await db.collection('submissions').orderBy('updated_at', 'desc').get();
+                allSubmissions = [];
+                submissionsSnap.forEach(doc => {
+                    allSubmissions.push({ id: doc.id, ...doc.data() });
+                });
+
+                document.getElementById('totalSubmissions').textContent = allSubmissions.length;
+                renderSubmissionsTable(allSubmissions);
+
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                showToast('Gagal memuat submissions: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function renderSubmissionsTable(data) {
+            const tbody = document.getElementById('submissionsTable');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 3rem; color: var(--gray-500);"><i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>Belum ada submission</td></tr>';
+                document.getElementById('paginationInfo').textContent = 'Menampilkan 0 data';
+                return;
+            }
+
+            tbody.innerHTML = data.map(sub => `
+                <tr>
+                    <td><input type="checkbox" class="sub-check" value="${sub.id}"></td>
+                    <td>
+                        <div class="name-cell">
+                            <div class="avatar">${getInitials(sub.nama)}</div>
+                            <span>${sub.nama || '-'}</span>
+                        </div>
+                    </td>
+                    <td><strong>${sub.npp || '-'}</strong></td>
+                    <td>${sub.jabatan || '-'}</td>
+                    <td>${sub.unit_kerja || '-'}</td>
+                    <td><strong>${(sub.modul_soft?.length || 0) + (sub.modul_tech?.length || 0)}</strong></td>
+                    <td>
+                        <span class="status-pill ${sub.status === 'submitted' ? 'success' : 'warning'}">
+                            <i class="fas ${sub.status === 'submitted' ? 'fa-check' : 'fa-clock'}"></i>
+                            ${sub.status === 'submitted' ? 'Submitted' : 'Draft'}
+                        </span>
+                    </td>
+                    <td style="font-size: 0.85rem; color: var(--gray-500);">${formatDate(sub.updated_at)}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn view" onclick="viewSubmission('${sub.id}')"><i class="fas fa-eye"></i></button>
+                            <button class="action-btn delete" onclick="deleteSubmission('${sub.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('paginationInfo').textContent = `Menampilkan ${data.length} data`;
+        }
+
+        function filterSubmissions() {
+            const search = document.getElementById('searchSubmission').value.toLowerCase();
+            const status = document.getElementById('filterStatus').value;
+
+            let filtered = allSubmissions;
+
+            if (search) {
+                filtered = filtered.filter(s => 
+                    (s.nama && s.nama.toLowerCase().includes(search)) ||
+                    (s.npp && s.npp.toLowerCase().includes(search)) ||
+                    (s.jabatan && s.jabatan.toLowerCase().includes(search))
+                );
+            }
+
+            if (status) {
+                filtered = filtered.filter(s => s.status === status);
+            }
+
+            renderSubmissionsTable(filtered);
+        }
+
+        function toggleCheckAll() {
+            const checkAll = document.getElementById('checkAll').checked;
+            document.querySelectorAll('.sub-check').forEach(cb => cb.checked = checkAll);
+        }
+
+        async function viewSubmission(id) {
+            const sub = allSubmissions.find(s => s.id === id);
+            if (!sub) return;
+
+            const detail = document.getElementById('submissionDetail');
+            detail.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <h4 style="color: var(--gray-500); font-size: 0.8rem; margin-bottom: 0.25rem;">NAMA PEGAWAI</h4>
+                        <p style="font-weight: 600;">${sub.nama || '-'}</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--gray-500); font-size: 0.8rem; margin-bottom: 0.25rem;">NPP</h4>
+                        <p style="font-weight: 600;">${sub.npp || '-'}</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--gray-500); font-size: 0.8rem; margin-bottom: 0.25rem;">JABATAN</h4>
+                        <p style="font-weight: 600;">${sub.jabatan || '-'}</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--gray-500); font-size: 0.8rem; margin-bottom: 0.25rem;">UNIT KERJA</h4>
+                        <p style="font-weight: 600;">${sub.unit_kerja || '-'}</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--gray-500); font-size: 0.8rem; margin-bottom: 0.25rem;">STATUS</h4>
+                        <span class="status-pill ${sub.status === 'submitted' ? 'success' : 'warning'}">
+                            ${sub.status === 'submitted' ? 'Submitted' : 'Draft'}
+                        </span>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--gray-500); font-size: 0.8rem; margin-bottom: 0.25rem;">WAKTU SUBMIT</h4>
+                        <p style="font-weight: 600;">${formatDate(sub.updated_at)}</p>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="margin-bottom: 0.75rem;"><i class="fas fa-brain" style="color: var(--primary);"></i> Modul Soft Competencies (${sub.modul_soft?.length || 0})</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        ${(sub.modul_soft || []).map(k => `<span class="status-pill info">${k}</span>`).join('') || '<span style="color: var(--gray-400);">Tidak ada</span>'}
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 style="margin-bottom: 0.75rem;"><i class="fas fa-cogs" style="color: var(--success);"></i> Modul Technical Competencies (${sub.modul_tech?.length || 0})</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        ${(sub.modul_tech || []).map(k => `<span class="status-pill success">${k}</span>`).join('') || '<span style="color: var(--gray-400);">Tidak ada</span>'}
+                    </div>
+                </div>
+            `;
+
+            openModal('modalViewSubmission');
+        }
+
+        async function deleteSubmission(id) {
+            if (!confirm('Yakin ingin menghapus submission ini?')) return;
+
+            showLoading();
+            try {
+                await db.collection('submissions').doc(id).delete();
+                showToast('Submission berhasil dihapus', 'success');
+                loadSubmissions();
+            } catch (error) {
+                console.error('Error deleting submission:', error);
+                showToast('Gagal menghapus: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // ===== PEGAWAI =====
+        async function loadPegawai() {
+            const tbody = document.getElementById('pegawaiTable');
+            
+            if (typeof PEGAWAI_DATA === 'undefined' || PEGAWAI_DATA.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--gray-500);">Belum ada data pegawai</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = PEGAWAI_DATA.slice(0, 100).map(peg => `
+                <tr>
+                    <td><strong>${peg.npp}</strong></td>
+                    <td>
+                        <div class="name-cell">
+                            <div class="avatar">${getInitials(peg.nama)}</div>
+                            <span>${peg.nama}</span>
+                        </div>
+                    </td>
+                    <td>${peg.jabatan}</td>
+                    <td>-</td>
+                    <td>${peg.unit_kerja}</td>
+                    <td><span class="status-pill info">-</span></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn view"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            document.querySelector('#pagePegawai .card-header h3').innerHTML = 
+                '<i class="fas fa-users"></i> Data Pegawai (' + PEGAWAI_DATA.length + ' orang)';
+        }
+
+        // ===== JABATAN =====
+        async function loadJabatan() {
+            const tbody = document.getElementById('jabatanTable');
+            
+            if (typeof JABATAN_DATA === 'undefined' || JABATAN_DATA.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--gray-500);">Belum ada data jabatan</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = JABATAN_DATA.slice(0, 100).map(jab => `
+                <tr>
+                    <td><strong>${jab.no_outline}</strong></td>
+                    <td>${jab.nama_jabatan}</td>
+                    <td>${jab.posisi || '-'}</td>
+                    <td>${jab.lokasi || '-'}</td>
+                    <td><span class="status-pill info">${jab.level || '-'}</span></td>
+                    <td><strong>${(jab.modul_soft_wajib?.length || 0) + (jab.modul_soft_opsional?.length || 0)}</strong></td>
+                    <td><strong>${(jab.modul_tech_wajib?.length || 0) + (jab.modul_tech_opsional?.length || 0)}</strong></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn view"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            document.querySelector('#pageJabatan .card-header h3').innerHTML = 
+                '<i class="fas fa-sitemap"></i> Data Jabatan (' + JABATAN_DATA.length + ' jabatan)';
+        }
+
+        // ===== MODUL =====
+        async function loadModul() {
+            const tbody = document.getElementById('modulTable');
+            
+            if (typeof MODUL_DATA === 'undefined' || MODUL_DATA.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--gray-500);">Belum ada data modul</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = MODUL_DATA.map(mod => `
+                <tr>
+                    <td><strong>${mod.kode}</strong></td>
+                    <td>${mod.nama}</td>
+                    <td>${mod.kategori}</td>
+                    <td>
+                        <span class="status-pill ${mod.tingkatan === 'Basic' ? 'info' : mod.tingkatan === 'Intermediate' ? 'warning' : 'danger'}">
+                            ${mod.tingkatan}
+                        </span>
+                    </td>
+                    <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${mod.tujuan || '-'}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn view"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            document.querySelector('#pageModul .card-header h3').innerHTML = 
+                '<i class="fas fa-book"></i> Data Modul (' + MODUL_DATA.length + ' modul)';
+        }
+
+        // ===== SETTINGS =====
+        function loadSettings() {
+            document.getElementById('countModul').textContent = typeof MODUL_DATA !== 'undefined' ? MODUL_DATA.length : 0;
+            document.getElementById('countJabatan').textContent = typeof JABATAN_DATA !== 'undefined' ? JABATAN_DATA.length : 0;
+            document.getElementById('countPegawai').textContent = typeof PEGAWAI_DATA !== 'undefined' ? PEGAWAI_DATA.length : 0;
+        }
+
+        // ===== MODAL =====
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // ===== FILE UPLOAD & EXCEL PARSER =====
         const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
         
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             dropZone.classList.add('dragover');
         });
-        
+
         dropZone.addEventListener('dragleave', () => {
             dropZone.classList.remove('dragover');
         });
-        
+
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropZone.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            if (file) processFile(file);
+            const files = e.dataTransfer.files;
+            if (files.length) handleFile(files[0]);
         });
-        
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) processFile(file);
-        }
-        
-        function processFile(file) {
-            if (!file.name.match(/\.(xlsx|xls)$/i)) {
-                showToast('File harus berformat Excel (.xlsx atau .xls)', 'error');
-                return;
-            }
-            
-            currentFile = file;
-            document.getElementById('fileName').textContent = file.name;
-            document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
-            document.getElementById('fileInfo').classList.add('show');
-            
-            // Parse Excel
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFile(e.target.files[0]);
+        });
+
+        let importedData = null;
+
+        function handleFile(file) {
+            showLoading();
             const reader = new FileReader();
-            reader.onload = function(e) {
+            
+            reader.onload = (e) => {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     
-                    switch(currentImportType) {
-                        case 'modul':
-                            parseModulFile(workbook);
-                            break;
-                        case 'jabatan':
-                            parseJabatanFile(workbook);
-                            break;
-                        case 'pegawai':
-                            parsePegawaiFile(workbook);
-                            break;
-                    }
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    
+                    importedData = {
+                        sheets: workbook.SheetNames,
+                        data: jsonData,
+                        workbook: workbook
+                    };
+
+                    showImportPreview(jsonData);
+                    hideLoading();
                 } catch (error) {
-                    console.error('Parse error:', error);
-                    showToast('Gagal membaca file Excel: ' + error.message, 'error');
+                    console.error('Error parsing file:', error);
+                    showToast('Gagal membaca file. Pastikan format file benar.', 'error');
+                    hideLoading();
                 }
             };
+            
             reader.readAsArrayBuffer(file);
         }
-        
-        function clearFile() {
-            currentFile = null;
-            parsedData = [];
+
+        function showImportPreview(data) {
+            const dropZone = document.getElementById('dropZone');
+            const preview = document.getElementById('importPreview');
+            const previewTable = document.getElementById('previewTable');
+            const summary = document.getElementById('importSummary');
+
+            dropZone.style.display = 'none';
+            preview.style.display = 'block';
+
+            const rowCount = data.length - 1;
+            const colCount = data[0] ? data[0].length : 0;
+            
+            summary.innerHTML = `
+                <div class="summary-item">
+                    <div class="value">${rowCount}</div>
+                    <div class="label">Total Baris</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value">${colCount}</div>
+                    <div class="label">Total Kolom</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value">${importedData.sheets.length}</div>
+                    <div class="label">Total Sheet</div>
+                </div>
+            `;
+
+            const previewData = data.slice(0, 11);
+            let tableHtml = '<table class="data-table"><thead><tr>';
+            
+            if (previewData[0]) {
+                previewData[0].forEach(cell => {
+                    tableHtml += `<th>${cell || ''}</th>`;
+                });
+            }
+            tableHtml += '</tr></thead><tbody>';
+            
+            previewData.slice(1).forEach(row => {
+                tableHtml += '<tr>';
+                row.forEach(cell => {
+                    tableHtml += `<td>${cell || ''}</td>`;
+                });
+                tableHtml += '</tr>';
+            });
+            
+            tableHtml += '</tbody></table>';
+            if (data.length > 11) {
+                tableHtml += `<p style="text-align: center; color: var(--gray-500); margin-top: 1rem;">... dan ${data.length - 11} baris lainnya</p>`;
+            }
+            
+            previewTable.innerHTML = tableHtml;
+        }
+
+        function cancelImport() {
+            document.getElementById('dropZone').style.display = 'block';
+            document.getElementById('importPreview').style.display = 'none';
             document.getElementById('fileInput').value = '';
-            document.getElementById('fileInfo').classList.remove('show');
-            document.getElementById('previewSection').classList.remove('show');
-            document.getElementById('progressSection').classList.remove('show');
+            importedData = null;
         }
-        
-        // ===== PARSE MODUL (Kode_Modul.xlsx) =====
-        function parseModulFile(workbook) {
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const raw = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        async function confirmImport() {
+            if (!importedData) return;
             
-            parsedData = [];
-            
-            // Header di row 1 (index 1): KOMPETENSI, Kode Modul, NAMA MODUL, TUJUAN, TINGKATAN
-            for (let i = 2; i < raw.length; i++) {
-                const row = raw[i];
-                if (!row || !row[1]) continue;
-                
-                const kodeRaw = String(row[1]).trim();
-                if (!kodeRaw || kodeRaw === 'Kode Modul') continue;
-                
-                // Extract short code
-                let kode = kodeRaw;
-                let jenis = 'technical';
-                
-                if (kodeRaw.startsWith('CCLM') || kodeRaw.startsWith('DCLM')) {
-                    jenis = 'soft';
-                } else {
-                    // Extract REN-01 from TCLM-xxx (REN)-01
-                    const match = kodeRaw.match(/\(([A-Z]+)\)-(\d+)$/);
-                    if (match) {
-                        kode = `${match[1]}-${match[2]}`;
-                    }
-                }
-                
-                parsedData.push({
-                    kode: kode,
-                    kode_full: kodeRaw,
-                    nama: String(row[2] || '').trim(),
-                    kategori: String(row[0] || '').trim(),
-                    tingkatan: String(row[4] || 'Basic').trim(),
-                    tujuan: String(row[3] || '').trim().substring(0, 500),
-                    jenis: jenis
-                });
-            }
-            
-            showPreview(['Kode', 'Nama', 'Kategori', 'Tingkatan', 'Jenis'], 
-                parsedData.map(m => [m.kode, m.nama.substring(0, 50), m.kategori.substring(0, 30), m.tingkatan, m.jenis]));
-            
-            showToast(`${parsedData.length} modul berhasil di-parse`, 'success');
-        }
-        
-        // ===== PARSE JABATAN (TNA_2026.xlsx) =====
-        function parseJabatanFile(workbook) {
-            parsedData = [];
-            const jabatanMap = {};
-            
-            // Sheet 1: Jabatan vs ModulSoft
-            const sheetSoft = workbook.Sheets['Jabatan vs ModulSoft'];
-            if (sheetSoft) {
-                const rawSoft = XLSX.utils.sheet_to_json(sheetSoft, { header: 1 });
-                
-                // Get modul codes from header row 1
-                const modulCodesSoft = [];
-                for (let col = 8; col < rawSoft[1]?.length; col++) {
-                    const val = rawSoft[1][col];
-                    if (val) {
-                        const code = String(val).split('\n')[0].trim();
-                        modulCodesSoft.push({ col, code });
-                    }
-                }
-                
-                // Parse jabatan data starting from row 8
-                for (let i = 8; i < rawSoft.length; i++) {
-                    const row = rawSoft[i];
-                    const noOutline = row[2] ? String(row[2]).trim() : '';
-                    const namaJabatan = row[3] ? String(row[3]).trim() : '';
-                    
-                    if (!noOutline || noOutline === 'nan') continue;
-                    
-                    // Sanitize jabId - remove problematic characters
-                    const jabId = noOutline
-                        .replace(/\./g, '-')
-                        .replace(/\//g, '-')
-                        .replace(/\\/g, '-')
-                        .replace(/\s+/g, '_');
-                    
-                    // Collect modul wajib (X) and opsional (XO)
-                    const softWajib = [];
-                    const softOpsional = [];
-                    
-                    modulCodesSoft.forEach(m => {
-                        const val = row[m.col] ? String(row[m.col]).trim().toUpperCase() : '';
-                        if (val === 'X') softWajib.push(m.code);
-                        else if (val === 'XO') softOpsional.push(m.code);
-                    });
-                    
-                    jabatanMap[jabId] = {
-                        no_outline: noOutline,
-                        nama_jabatan: namaJabatan,
-                        posisi: row[4] ? String(row[4]).trim() : '',
-                        lokasi: row[5] ? String(row[5]).trim() : '',
-                        level: row[6] ? String(row[6]).trim() : '',
-                        modul_soft_wajib: softWajib,
-                        modul_soft_opsional: softOpsional,
-                        modul_tech_wajib: [],
-                        modul_tech_opsional: []
-                    };
-                }
-            }
-            
-            // Sheet 2: Jabatan vs ModulTech
-            const sheetTech = workbook.Sheets['Jabatan vs ModulTech'];
-            if (sheetTech) {
-                const rawTech = XLSX.utils.sheet_to_json(sheetTech, { header: 1 });
-                
-                // Get modul codes from header row 2
-                const modulCodesTech = [];
-                for (let col = 6; col < rawTech[2]?.length; col++) {
-                    const val = rawTech[2][col];
-                    if (val) {
-                        const codeRaw = String(val).split('\n')[0].trim();
-                        const match = codeRaw.match(/TCLM-([A-Z]+)-(\d+)/);
-                        const code = match ? `${match[1]}-${match[2]}` : codeRaw;
-                        modulCodesTech.push({ col, code });
-                    }
-                }
-                
-                // Parse tech modul for existing jabatan
-                for (let i = 10; i < rawTech.length; i++) {
-                    const row = rawTech[i];
-                    const namaJabatan = row[1] ? String(row[1]).trim() : '';
-                    
-                    if (!namaJabatan) continue;
-                    
-                    // Find matching jabatan by name
-                    let matchedId = null;
-                    for (const [id, jab] of Object.entries(jabatanMap)) {
-                        if (jab.nama_jabatan === namaJabatan) {
-                            matchedId = id;
-                            break;
-                        }
-                    }
-                    
-                    if (!matchedId) continue;
-                    
-                    // Collect tech modul
-                    modulCodesTech.forEach(m => {
-                        const val = row[m.col] ? String(row[m.col]).trim().toUpperCase() : '';
-                        if (val === 'X') jabatanMap[matchedId].modul_tech_wajib.push(m.code);
-                        else if (val === 'XO') jabatanMap[matchedId].modul_tech_opsional.push(m.code);
-                    });
-                }
-            }
-            
-            parsedData = Object.values(jabatanMap);
-            
-            showPreview(['No Outline', 'Nama Jabatan', 'Posisi', 'Soft', 'Tech'], 
-                parsedData.slice(0, 100).map(j => [
-                    j.no_outline, 
-                    j.nama_jabatan.substring(0, 40), 
-                    j.posisi.substring(0, 15),
-                    (j.modul_soft_wajib?.length || 0) + (j.modul_soft_opsional?.length || 0),
-                    (j.modul_tech_wajib?.length || 0) + (j.modul_tech_opsional?.length || 0)
-                ]));
-            
-            showToast(`${parsedData.length} jabatan berhasil di-parse`, 'success');
-        }
-        
-        // ===== PARSE PEGAWAI (Database_202511.xlsx) =====
-        function parsePegawaiFile(workbook) {
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const raw = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-            
-            parsedData = [];
-            let autoId = 1;
-            
-            console.log('Total rows in Excel:', raw.length);
-            
-            // Data starts from row 6 (index 6) - SheetJS indexing
-            // Columns: 3=Nama, 5=NPP part1 (tahun-bulan), 6=NPP part2 (nomor urut), 10=Jabatan, 12=Unit Kerja, 13=Status
-            // NPP LENGKAP = col5 + col6 (contoh: "80 05" + "0538" = "80050538")
-            for (let i = 6; i < raw.length; i++) {
-                const row = raw[i] || [];
-                const nama = row[3] ? String(row[3]).trim() : '';
-                const nppPart1 = row[5]; // tahun-bulan: "80 05"
-                const nppPart2 = row[6]; // nomor urut: "0538"
-                const jabatan = row[10] ? String(row[10]).trim() : '';
-                const unit = row[12] ? String(row[12]).trim() : '';
-                const status = row[13] ? String(row[13]).trim() : '';
-                
-                // Skip empty rows, headers, and summary rows
-                if (!nama) continue;
-                if (nama === 'undefined' || nama === 'nan' || nama === 'NAMA PEGAWAI' || nama === '2') continue;
-                if (nama.includes('Jumlah')) continue;
-                
-                // Build full NPP from col5 + col6
-                let npp = '';
-                let tipeKaryawan = 'Kontrak';
-                
-                if (nppPart1 && String(nppPart1).trim() && String(nppPart1) !== 'undefined' && String(nppPart1).trim() !== 'nan') {
-                    // Clean part1: "80 05" -> "8005"
-                    const part1Clean = String(nppPart1).replace(/\s/g, '');
-                    // Clean part2: "0538" -> "538" (remove leading zeros)
-                    let part2Clean = '';
-                    if (nppPart2 && String(nppPart2) !== 'undefined' && String(nppPart2).trim() !== 'nan') {
-                        // Remove leading zeros and any spaces
-                        part2Clean = String(nppPart2).replace(/\s/g, '').replace(/^0+/, '');
-                    }
-                    // Combine: "8005" + "538" = "8005538"
-                    npp = part1Clean + part2Clean;
-                    tipeKaryawan = 'Organik';
-                } else {
-                    // Generate unique ID for kontrak/magang employees without NPP
-                    npp = 'K' + String(autoId).padStart(5, '0');
-                    autoId++;
-                }
-                
-                if (!npp) continue;
-                
-                parsedData.push({
-                    npp: npp,
-                    nama: nama,
-                    jabatan: jabatan,
-                    unit_kerja: unit,
-                    status: status || tipeKaryawan,
-                    tipe: tipeKaryawan
-                });
-            }
-            
-            console.log('Parsed pegawai:', parsedData.length);
-            
-            // Count by type
-            const organik = parsedData.filter(p => p.tipe === 'Organik').length;
-            const kontrak = parsedData.filter(p => p.tipe === 'Kontrak').length;
-            
-            showPreview(['NPP', 'Nama', 'Jabatan', 'Unit Kerja', 'Status'], 
-                parsedData.slice(0, 100).map(p => [p.npp, p.nama.substring(0, 30), p.jabatan.substring(0, 30), p.unit_kerja, p.status]));
-            
-            showToast(`${parsedData.length} pegawai berhasil di-parse (${organik} Organik, ${kontrak} Kontrak/Magang)`, 'success');
-        }
-        
-        // ===== SHOW PREVIEW =====
-        function showPreview(headers, rows) {
-            const thead = document.getElementById('previewHead');
-            const tbody = document.getElementById('previewBody');
-            
-            thead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
-            tbody.innerHTML = rows.map(row => 
-                '<tr>' + row.map(cell => `<td>${cell || '-'}</td>`).join('') + '</tr>'
-            ).join('');
-            
-            document.getElementById('previewCount').textContent = parsedData.length;
-            document.getElementById('previewSection').classList.add('show');
-        }
-        
-        // ===== IMPORT TO FIREBASE =====
-        async function importToFirebase() {
-            if (parsedData.length === 0) {
-                showToast('Tidak ada data untuk diimport', 'error');
-                return;
-            }
-            
-            const btn = document.getElementById('btnImport');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
-            
-            document.getElementById('progressSection').classList.add('show');
-            const progressBar = document.getElementById('progressBar');
-            const progressText = document.getElementById('progressText');
+            showLoading();
             
             try {
-                const collection = currentImportType === 'jabatan' ? 'jabatan' : currentImportType;
-                const total = parsedData.length;
-                let uploaded = 0;
-                const batchSize = 400;
+                const activeTab = document.querySelector('.tab-btn[data-import].active');
+                const importType = activeTab ? activeTab.dataset.import : 'pegawai';
                 
-                for (let i = 0; i < total; i += batchSize) {
-                    const batch = db.batch();
-                    const chunk = parsedData.slice(i, Math.min(i + batchSize, total));
-                    
-                    chunk.forEach(item => {
-                        let docId;
-                        let data = { ...item };
-                        
-                        switch(currentImportType) {
-                            case 'modul':
-                                docId = item.kode;
-                                data.created_at = firebase.firestore.FieldValue.serverTimestamp();
-                                break;
-                            case 'jabatan':
-                                // Sanitize: use no_outline, replace problematic characters
-                                docId = (item.no_outline || 'unknown')
-                                    .replace(/\./g, '-')
-                                    .replace(/\//g, '-')
-                                    .replace(/\\/g, '-')
-                                    .replace(/\s+/g, '_')
-                                    .substring(0, 100);
-                                data.created_at = firebase.firestore.FieldValue.serverTimestamp();
-                                break;
-                            case 'pegawai':
-                                docId = item.npp;
-                                data.created_at = firebase.firestore.FieldValue.serverTimestamp();
-                                break;
-                        }
-                        
-                        // Final safety check - remove any remaining /
-                        docId = String(docId).replace(/\//g, '-');
-                        
-                        if (!docId || docId === 'unknown') {
-                            console.log('Skipping invalid item:', item);
-                            return;
-                        }
-                        
-                        const ref = db.collection(collection).doc(docId);
-                        batch.set(ref, data, { merge: true });
-                    });
-                    
-                    await batch.commit();
-                    uploaded += chunk.length;
-                    
-                    const percent = Math.round((uploaded / total) * 100);
-                    progressBar.style.width = percent + '%';
-                    progressText.textContent = `Importing... ${uploaded}/${total} (${percent}%)`;
+                let savedCount = 0;
+                
+                if (importType === 'pegawai') {
+                    savedCount = await importPegawai(importedData);
                 }
                 
-                progressText.textContent = `Selesai! ${total} data berhasil diimport.`;
-                showToast(`${total} ${currentImportType} berhasil diimport ke Firebase!`, 'success');
-                
-                // Refresh data view
-                loadAllData();
+                showToast(`Berhasil import ${savedCount} data!`, 'success');
+                cancelImport();
+                loadPageData(importType);
                 
             } catch (error) {
                 console.error('Import error:', error);
-                showToast('Gagal import: ' + error.message, 'error');
+                showToast('Gagal import data: ' + error.message, 'error');
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-upload"></i> Import ke Firebase';
+                hideLoading();
             }
         }
-        
-        // ===== LOAD DATA FROM FIREBASE =====
-        async function loadAllData() {
-            try {
-                // Load Pegawai (tanpa limit - ambil semua)
-                const pegawaiSnap = await db.collection('pegawai').get();
-                const pegawaiData = [];
-                pegawaiSnap.forEach(doc => pegawaiData.push({ id: doc.id, ...doc.data() }));
-                
-                document.getElementById('statPegawai').textContent = pegawaiData.length;
-                document.getElementById('countPegawai').textContent = pegawaiData.length;
-                
-                document.getElementById('tablePegawai').innerHTML = pegawaiData.map(p => `
-                    <tr>
-                        <td><strong>${p.npp}</strong></td>
-                        <td>${p.nama}</td>
-                        <td>${p.jabatan || '-'}</td>
-                        <td>${p.unit_kerja || '-'}</td>
-                    </tr>
-                `).join('') || '<tr><td colspan="4" style="text-align:center;padding:2rem;">Belum ada data</td></tr>';
-                
-                // Load Jabatan (tanpa limit - ambil semua)
-                const jabatanSnap = await db.collection('jabatan').get();
-                const jabatanData = [];
-                jabatanSnap.forEach(doc => jabatanData.push({ id: doc.id, ...doc.data() }));
-                
-                document.getElementById('statJabatan').textContent = jabatanData.length;
-                document.getElementById('countJabatan').textContent = jabatanData.length;
-                
-                document.getElementById('tableJabatan').innerHTML = jabatanData.map(j => `
-                    <tr>
-                        <td><strong>${j.no_outline}</strong></td>
-                        <td>${j.nama_jabatan || '-'}</td>
-                        <td>${j.posisi || '-'}</td>
-                        <td>${j.lokasi || '-'}</td>
-                        <td>${(j.modul_soft_wajib?.length || 0) + (j.modul_soft_opsional?.length || 0)}</td>
-                        <td>${(j.modul_tech_wajib?.length || 0) + (j.modul_tech_opsional?.length || 0)}</td>
-                    </tr>
-                `).join('') || '<tr><td colspan="6" style="text-align:center;padding:2rem;">Belum ada data</td></tr>';
-                
-                // Load Modul (tanpa limit - ambil semua)
-                const modulSnap = await db.collection('modul').get();
-                const modulData = [];
-                modulSnap.forEach(doc => modulData.push({ id: doc.id, ...doc.data() }));
-                
-                document.getElementById('statModul').textContent = modulData.length;
-                document.getElementById('countModul').textContent = modulData.length;
-                
-                document.getElementById('tableModul').innerHTML = modulData.map(m => `
-                    <tr>
-                        <td><strong>${m.kode}</strong></td>
-                        <td>${m.nama || '-'}</td>
-                        <td>${m.kategori || '-'}</td>
-                        <td><span class="pill pill-${m.tingkatan === 'Basic' ? 'info' : m.tingkatan === 'Intermediate' ? 'warning' : 'success'}">${m.tingkatan}</span></td>
-                        <td><span class="pill pill-${m.jenis === 'soft' ? 'info' : 'success'}">${m.jenis}</span></td>
-                    </tr>
-                `).join('') || '<tr><td colspan="5" style="text-align:center;padding:2rem;">Belum ada data</td></tr>';
-                
-            } catch (error) {
-                console.error('Load error:', error);
-                showToast('Gagal memuat data: ' + error.message, 'error');
-            }
-        }
-        
-        // ===== DATA TAB NAVIGATION =====
-        function showDataTab(tab) {
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.data-section').forEach(s => s.classList.remove('active'));
+
+        async function importPegawai(importedData) {
+            const data = importedData.data;
+            const rows = data.slice(1).filter(row => row[0]);
             
-            event.target.classList.add('active');
-            document.getElementById('data' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+            let savedCount = 0;
+            const batch = db.batch();
+            
+            for (const row of rows) {
+                const npp = String(row[0] || '').trim();
+                if (!npp) continue;
+                
+                const pegawai = {
+                    npp: npp,
+                    nama: String(row[1] || '').trim(),
+                    jabatan: String(row[2] || '').trim(),
+                    unit_kerja: String(row[3] || '').trim(),
+                    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                const ref = db.collection('pegawai').doc(npp);
+                batch.set(ref, pegawai, { merge: true });
+                savedCount++;
+                
+                if (savedCount % 400 === 0) {
+                    await batch.commit();
+                }
+            }
+            
+            await batch.commit();
+            return savedCount;
         }
-        
-        function filterData() {
-            const query = document.getElementById('searchData').value.toLowerCase();
-            document.querySelectorAll('.data-section.active tbody tr').forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(query) ? '' : 'none';
+
+        // ===== EXPORT =====
+        function exportSubmissions() {
+            if (allSubmissions.length === 0) {
+                showToast('Tidak ada data untuk di-export', 'warning');
+                return;
+            }
+            exportSubmissionsToExcel();
+        }
+
+        function exportSubmissionsToExcel() {
+            const data = allSubmissions.map(s => ({
+                'NPP': s.npp || '',
+                'Nama': s.nama || '',
+                'Jabatan': s.jabatan || '',
+                'Unit Kerja': s.unit_kerja || '',
+                'Modul Soft': (s.modul_soft || []).join(', '),
+                'Modul Tech': (s.modul_tech || []).join(', '),
+                'Total Modul': (s.modul_soft?.length || 0) + (s.modul_tech?.length || 0),
+                'Status': s.status || '',
+                'Waktu Submit': formatDate(s.updated_at)
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Submissions');
+            XLSX.writeFile(wb, 'TNA_Submissions_' + new Date().toISOString().split('T')[0] + '.xlsx');
+            
+            showToast('Export berhasil!', 'success');
+        }
+
+        function exportModulSummary() {
+            showToast('Fitur export rekap modul akan segera tersedia', 'warning');
+        }
+
+        // ===== INITIALIZE FIREBASE WITH EMBEDDED DATA =====
+        async function initializeFirebaseData(type) {
+            if (typeof MODUL_DATA === 'undefined' || typeof JABATAN_DATA === 'undefined') {
+                showToast('Data tidak tersedia. Pastikan file tna-data.js dimuat.', 'error');
+                return;
+            }
+
+            document.getElementById('countModul').textContent = MODUL_DATA.length;
+            document.getElementById('countJabatan').textContent = JABATAN_DATA.length;
+
+            const progressDiv = document.getElementById('initProgress');
+            const progressBar = document.getElementById('initProgressBar');
+            const progressText = document.getElementById('initProgressText');
+            progressDiv.style.display = 'block';
+            progressBar.style.width = '0%';
+
+            try {
+                if (type === 'modul' || type === 'all') {
+                    progressText.textContent = 'Mengupload data modul...';
+                    await uploadModulToFirebase(progressBar, progressText);
+                }
+
+                if (type === 'jabatan' || type === 'all') {
+                    progressText.textContent = 'Mengupload data jabatan...';
+                    await uploadJabatanToFirebase(progressBar, progressText);
+                }
+
+                progressBar.style.width = '100%';
+                progressText.textContent = 'Selesai!';
+                showToast('Data berhasil diupload ke Firebase!', 'success');
+
+            } catch (error) {
+                console.error('Initialize error:', error);
+                showToast('Gagal upload data: ' + error.message, 'error');
+            }
+        }
+
+        async function uploadModulToFirebase(progressBar, progressText) {
+            const total = MODUL_DATA.length;
+            let uploaded = 0;
+            const batchSize = 400;
+
+            for (let i = 0; i < total; i += batchSize) {
+                const batch = db.batch();
+                const chunk = MODUL_DATA.slice(i, Math.min(i + batchSize, total));
+
+                chunk.forEach(modul => {
+                    const ref = db.collection('modul').doc(modul.kode);
+                    batch.set(ref, {
+                        kode: modul.kode,
+                        kode_full: modul.kode_full || modul.kode,
+                        nama: modul.nama,
+                        kategori: modul.kategori,
+                        tingkatan: modul.tingkatan,
+                        tujuan: modul.tujuan || '',
+                        jenis: modul.jenis,
+                        created_at: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+
+                await batch.commit();
+                uploaded += chunk.length;
+                const percent = Math.round((uploaded / total) * 50);
+                progressBar.style.width = percent + '%';
+                progressText.textContent = `Modul: ${uploaded}/${total} (${percent}%)`;
+            }
+        }
+
+        async function uploadJabatanToFirebase(progressBar, progressText) {
+            const total = JABATAN_DATA.length;
+            let uploaded = 0;
+            const batchSize = 400;
+
+            for (let i = 0; i < total; i += batchSize) {
+                const batch = db.batch();
+                const chunk = JABATAN_DATA.slice(i, Math.min(i + batchSize, total));
+
+                chunk.forEach(jabatan => {
+                    const jabId = jabatan.no_outline.replace(/\./g, '-');
+                    const ref = db.collection('jabatan').doc(jabId);
+                    batch.set(ref, {
+                        no_outline: jabatan.no_outline,
+                        nama_jabatan: jabatan.nama_jabatan,
+                        posisi: jabatan.posisi || '',
+                        lokasi: jabatan.lokasi || '',
+                        level: jabatan.level || '',
+                        modul_soft_wajib: jabatan.modul_soft_wajib || [],
+                        modul_soft_opsional: jabatan.modul_soft_opsional || [],
+                        modul_tech_wajib: jabatan.modul_tech_wajib || [],
+                        modul_tech_opsional: jabatan.modul_tech_opsional || [],
+                        created_at: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+
+                await batch.commit();
+                uploaded += chunk.length;
+                const percent = 50 + Math.round((uploaded / total) * 50);
+                progressBar.style.width = percent + '%';
+                progressText.textContent = `Jabatan: ${uploaded}/${total} (${percent}%)`;
+            }
+        }
+
+        // ===== SIDEBAR TOGGLE =====
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+
+        // ===== TAB HANDLERS =====
+        document.querySelectorAll('.tab-btn[data-import]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn[data-import]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
             });
+        });
+
+        function savePegawai() {
+            showToast('Data pegawai berhasil disimpan!', 'success');
+            closeModal('modalAddPegawai');
         }
-        
+
         // ===== INIT =====
         document.addEventListener('DOMContentLoaded', () => {
-            loadAllData();
+            loadDashboard();
         });
     </script>
 </body>
