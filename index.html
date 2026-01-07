@@ -1,0 +1,2721 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TNA Admin - Bank Sulselbar</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    
+    <!-- SheetJS for Excel parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- TNA Data (dari Excel) -->
+    <script src="./tna-data.js"></script>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary: #0A4D8C;
+            --primary-dark: #063A6A;
+            --primary-light: #1E6FBA;
+            --secondary: #D4A84B;
+            --secondary-light: #E8C678;
+            --accent: #00B4D8;
+            --dark: #1A1A2E;
+            --light: #F8FAFC;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --info: #3B82F6;
+            --gray-50: #F9FAFB;
+            --gray-100: #F1F5F9;
+            --gray-200: #E2E8F0;
+            --gray-300: #CBD5E1;
+            --gray-400: #94A3B8;
+            --gray-500: #64748B;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1E293B;
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            --gradient-gold: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-light) 100%);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--gray-100);
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--dark);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-logo {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-logo img, .sidebar-logo svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .sidebar-brand {
+            color: white;
+        }
+
+        .sidebar-brand h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .sidebar-brand p {
+            font-size: 0.75rem;
+            color: var(--gray-400);
+            margin: 0;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 1.5rem 0;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-title {
+            padding: 0 1.5rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            padding: 0.875rem 1.5rem;
+            color: var(--gray-400);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(10, 77, 140, 0.3);
+            color: white;
+            border-left-color: var(--secondary);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            background: var(--danger);
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-gold);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-info .name {
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-info .role {
+            color: var(--gray-400);
+            font-size: 0.75rem;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .main-header {
+            height: var(--header-height);
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--gray-600);
+            cursor: pointer;
+        }
+
+        .page-title h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .page-title p {
+            font-size: 0.85rem;
+            color: var(--gray-500);
+            margin: 0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-btn {
+            width: 42px;
+            height: 42px;
+            background: var(--gray-100);
+            border: none;
+            border-radius: 10px;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .header-btn:hover {
+            background: var(--gray-200);
+            color: var(--primary);
+        }
+
+        .header-btn .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-content {
+            padding: 2rem;
+        }
+
+        /* ===== DASHBOARD CARDS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .stat-card.primary::before { background: var(--primary); }
+        .stat-card.success::before { background: var(--success); }
+        .stat-card.warning::before { background: var(--warning); }
+        .stat-card.info::before { background: var(--info); }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-card.primary .stat-icon { background: var(--gradient-primary); }
+        .stat-card.success .stat-icon { background: linear-gradient(135deg, #10B981, #34D399); }
+        .stat-card.warning .stat-icon { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
+        .stat-card.info .stat-icon { background: linear-gradient(135deg, #3B82F6, #60A5FA); }
+
+        .stat-content h3 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .stat-content p {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        .stat-trend {
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .stat-trend .value {
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .stat-trend .value.up { color: var(--success); }
+        .stat-trend .value.down { color: var(--danger); }
+
+        .stat-trend .label {
+            font-size: 0.75rem;
+            color: var(--gray-400);
+        }
+
+        /* ===== CONTENT CARDS ===== */
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-header h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-header h3 i {
+            color: var(--primary);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* ===== TABLE ===== */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: var(--gray-50);
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-100);
+            font-size: 0.9rem;
+            color: var(--gray-700);
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        .data-table .name-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .data-table .avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-pill.success { background: #D1FAE5; color: #065F46; }
+        .status-pill.warning { background: #FEF3C7; color: #92400E; }
+        .status-pill.danger { background: #FEE2E2; color: #991B1B; }
+        .status-pill.info { background: #DBEAFE; color: #1E40AF; }
+
+        .action-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn.view { background: #DBEAFE; color: #1E40AF; }
+        .action-btn.edit { background: #FEF3C7; color: #92400E; }
+        .action-btn.delete { background: #FEE2E2; color: #991B1B; }
+
+        .action-btn:hover { transform: scale(1.1); }
+
+        /* ===== CHARTS ===== */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            height: 300px;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 12px rgba(10, 77, 140, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10B981, #34D399);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--gray-300);
+            color: var(--gray-600);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow: hidden;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .modal-close {
+            background: var(--gray-100);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--gray-600);
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        /* ===== FORMS ===== */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(10, 77, 140, 0.1);
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 20px;
+            padding-right: 2.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        /* ===== FILE UPLOAD ===== */
+        .file-upload-zone {
+            border: 2px dashed var(--gray-300);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: var(--gray-50);
+        }
+
+        .file-upload-zone:hover,
+        .file-upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(10, 77, 140, 0.05);
+        }
+
+        .file-upload-zone .icon {
+            font-size: 3rem;
+            color: var(--gray-400);
+            margin-bottom: 1rem;
+        }
+
+        .file-upload-zone h4 {
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .file-upload-zone p {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+        }
+
+        .file-upload-zone input {
+            display: none;
+        }
+
+        /* ===== IMPORT PREVIEW ===== */
+        .import-preview {
+            max-height: 400px;
+            overflow: auto;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            margin-top: 1.5rem;
+        }
+
+        .import-preview table {
+            font-size: 0.8rem;
+        }
+
+        .import-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .summary-item {
+            background: var(--gray-100);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .summary-item .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .summary-item .label {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        /* ===== SEARCH & FILTER BAR ===== */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-input input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .search-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .search-input i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+        }
+
+        /* ===== PAGINATION ===== */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 0;
+        }
+
+        .pagination-info {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+        }
+
+        .pagination-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .page-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--gray-200);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-600);
+        }
+
+        .page-btn:hover, .page-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* ===== PAGE SECTIONS ===== */
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== LOADING ===== */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== TOAST ===== */
+        .toast-container {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 99999;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .toast.success i { color: var(--success); }
+        .toast.error i { color: var(--danger); }
+        .toast.warning i { color: var(--warning); }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--gray-500);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--gray-300);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h4 {
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        /* ===== TABS ===== */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--gray-200);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.875rem 1.5rem;
+            background: none;
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--gray-500);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+        }
+
+        .tab-btn.active::after {
+            transform: scaleX(1);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-input {
+                min-width: 100%;
+            }
+        }
+
+        /* Progress Ring */
+        .progress-ring {
+            width: 120px;
+            height: 120px;
+            position: relative;
+        }
+
+        .progress-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 8;
+        }
+
+        .progress-ring .bg {
+            stroke: var(--gray-200);
+        }
+
+        .progress-ring .progress {
+            stroke: var(--primary);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .progress-ring .value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        /* Mapping Matrix */
+        .matrix-table {
+            overflow-x: auto;
+        }
+
+        .matrix-table table {
+            min-width: 100%;
+            font-size: 0.8rem;
+        }
+
+        .matrix-table th, .matrix-table td {
+            padding: 0.5rem;
+            text-align: center;
+            border: 1px solid var(--gray-200);
+            min-width: 40px;
+        }
+
+        .matrix-table th {
+            background: var(--gray-100);
+            position: sticky;
+            top: 0;
+        }
+
+        .matrix-table .row-header {
+            position: sticky;
+            left: 0;
+            background: var(--gray-100);
+            text-align: left;
+            min-width: 200px;
+        }
+
+        .matrix-check {
+            color: var(--success);
+        }
+
+        .matrix-optional {
+            color: var(--warning);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="./logo.png" alt="Bank Sulselbar" style="width: 40px; height: auto;">
+            </div>
+            <div class="sidebar-brand">
+                <h2>TNA Admin</h2>
+                <p>Bank Sulselbar 2026</p>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Menu Utama</div>
+                <div class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item" data-page="submissions">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Submissions</span>
+                    <span class="badge" id="submissionBadge">0</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Master Data</div>
+                <div class="nav-item" data-page="pegawai">
+                    <i class="fas fa-users"></i>
+                    <span>Data Pegawai</span>
+                </div>
+                <div class="nav-item" data-page="jabatan">
+                    <i class="fas fa-sitemap"></i>
+                    <span>Data Jabatan</span>
+                </div>
+                <div class="nav-item" data-page="modul">
+                    <i class="fas fa-book"></i>
+                    <span>Data Modul</span>
+                </div>
+                <div class="nav-item" data-page="mapping">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Mapping Matrix</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Tools</div>
+                <div class="nav-item" data-page="import">
+                    <i class="fas fa-file-import"></i>
+                    <span>Import Excel</span>
+                </div>
+                <div class="nav-item" data-page="export">
+                    <i class="fas fa-file-export"></i>
+                    <span>Export Report</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Pengaturan</div>
+                <div class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Pengaturan</span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <div class="user-avatar">HC</div>
+                <div class="user-info">
+                    <div class="name">Admin HC</div>
+                    <div class="role">Human Capital</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="page-title">
+                    <h1 id="pageTitle">Dashboard</h1>
+                    <p id="pageSubtitle">Selamat datang di TNA Admin Bank Sulselbar</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="header-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge">3</span>
+                </button>
+                <button class="header-btn">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <section class="page-section active" id="pageDashboard">
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card primary">
+                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                        <div class="stat-content">
+                            <h3 id="statTotalPegawai">0</h3>
+                            <p>Total Pegawai</p>
+                        </div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-content">
+                            <h3 id="statSubmitted">0</h3>
+                            <p>Sudah Submit</p>
+                        </div>
+                        <div class="stat-trend">
+                            <div class="value up" id="submitPercent">0%</div>
+                            <div class="label">dari total</div>
+                        </div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                        <div class="stat-content">
+                            <h3 id="statPending">0</h3>
+                            <p>Belum Submit</p>
+                        </div>
+                    </div>
+                    <div class="stat-card info">
+                        <div class="stat-icon"><i class="fas fa-book"></i></div>
+                        <div class="stat-content">
+                            <h3 id="statTotalModul">0</h3>
+                            <p>Total Modul</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="chart-grid">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-bar"></i> Submission per Unit Kerja</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="chartUnitKerja"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-pie"></i> Status Pengisian TNA</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="chartStatus"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Submissions -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-history"></i> Submission Terbaru</h3>
+                        <button class="btn btn-outline" onclick="navigateTo('submissions')">
+                            Lihat Semua <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Pegawai</th>
+                                        <th>Jabatan</th>
+                                        <th>Unit Kerja</th>
+                                        <th>Modul Dipilih</th>
+                                        <th>Status</th>
+                                        <th>Waktu</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentSubmissions">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Modules -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-fire"></i> Modul Paling Dibutuhkan</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Kode</th>
+                                        <th>Nama Modul</th>
+                                        <th>Kategori</th>
+                                        <th>Tingkatan</th>
+                                        <th>Kebutuhan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topModules">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Submissions Page -->
+            <section class="page-section" id="pageSubmissions">
+                <div class="toolbar">
+                    <div class="search-input">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Cari berdasarkan nama, NPP, atau jabatan...">
+                    </div>
+                    <select class="form-control form-select" style="width: auto;">
+                        <option value="">Semua Status</option>
+                        <option value="submitted">Sudah Submit</option>
+                        <option value="draft">Draft</option>
+                        <option value="pending">Belum Mengisi</option>
+                    </select>
+                    <select class="form-control form-select" style="width: auto;">
+                        <option value="">Semua Unit Kerja</option>
+                        <option value="KP SIMO">KP SIMO</option>
+                        <option value="KP HC">KP HC</option>
+                        <option value="KP TI">KP TI</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="exportSubmissions()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox"></th>
+                                        <th>Pegawai</th>
+                                        <th>NPP</th>
+                                        <th>Jabatan</th>
+                                        <th>Unit Kerja</th>
+                                        <th>Level</th>
+                                        <th>Modul</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="submissionsTable">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination">
+                            <div class="pagination-info">Menampilkan 1-10 dari 100 data</div>
+                            <div class="pagination-btns">
+                                <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
+                                <button class="page-btn active">1</button>
+                                <button class="page-btn">2</button>
+                                <button class="page-btn">3</button>
+                                <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pegawai Page -->
+            <section class="page-section" id="pagePegawai">
+                <div class="toolbar">
+                    <div class="search-input">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Cari pegawai...">
+                    </div>
+                    <button class="btn btn-success" onclick="openModal('modalAddPegawai')">
+                        <i class="fas fa-plus"></i> Tambah Pegawai
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('modalImport')">
+                        <i class="fas fa-file-import"></i> Import Excel
+                    </button>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>NPP</th>
+                                        <th>Nama</th>
+                                        <th>Jabatan</th>
+                                        <th>Posisi</th>
+                                        <th>Unit Kerja</th>
+                                        <th>Level</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pegawaiTable">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Jabatan Page -->
+            <section class="page-section" id="pageJabatan">
+                <div class="toolbar">
+                    <div class="search-input">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Cari jabatan...">
+                    </div>
+                    <button class="btn btn-success" onclick="openModal('modalAddJabatan')">
+                        <i class="fas fa-plus"></i> Tambah Jabatan
+                    </button>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>No Outline</th>
+                                        <th>Nama Jabatan</th>
+                                        <th>Posisi</th>
+                                        <th>Lokasi</th>
+                                        <th>Level</th>
+                                        <th>Modul Soft</th>
+                                        <th>Modul Tech</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="jabatanTable">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Modul Page -->
+            <section class="page-section" id="pageModul">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="modulSoft">Soft Competencies</button>
+                    <button class="tab-btn" data-tab="modulTech">Technical Competencies</button>
+                </div>
+
+                <div class="toolbar">
+                    <div class="search-input">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Cari modul...">
+                    </div>
+                    <button class="btn btn-success" onclick="openModal('modalAddModul')">
+                        <i class="fas fa-plus"></i> Tambah Modul
+                    </button>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Kode</th>
+                                        <th>Nama Modul</th>
+                                        <th>Kategori</th>
+                                        <th>Tingkatan</th>
+                                        <th>Tujuan</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modulTable">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mapping Page -->
+            <section class="page-section" id="pageMapping">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-project-diagram"></i> Matrix Jabatan vs Modul</h3>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <select class="form-control form-select" style="width: auto;" id="mappingType">
+                                <option value="soft">Soft Competencies</option>
+                                <option value="tech">Technical Competencies</option>
+                            </select>
+                            <button class="btn btn-outline" onclick="openModal('modalImport')">
+                                <i class="fas fa-file-import"></i> Import Matrix
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="matrix-table" id="matrixContainer">
+                            <!-- Matrix will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Import Page -->
+            <section class="page-section" id="pageImport">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-file-import"></i> Import Data dari Excel</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="tabs">
+                            <button class="tab-btn active" data-import="pegawai">Data Pegawai</button>
+                            <button class="tab-btn" data-import="jabatan">Data Jabatan</button>
+                            <button class="tab-btn" data-import="modul">Data Modul</button>
+                            <button class="tab-btn" data-import="matrix">Matrix Mapping</button>
+                        </div>
+
+                        <div class="file-upload-zone" id="dropZone">
+                            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+                            <div class="icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <h4>Drag & Drop file Excel di sini</h4>
+                            <p>atau klik untuk memilih file (.xlsx, .xls, .csv)</p>
+                        </div>
+
+                        <div id="importPreview" style="display: none;">
+                            <div class="import-summary" id="importSummary">
+                                <!-- Summary will appear here -->
+                            </div>
+                            <div class="import-preview" id="previewTable">
+                                <!-- Preview table will appear here -->
+                            </div>
+                            <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                                <button class="btn btn-outline" onclick="cancelImport()">
+                                    <i class="fas fa-times"></i> Batal
+                                </button>
+                                <button class="btn btn-success" onclick="confirmImport()">
+                                    <i class="fas fa-check"></i> Import Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Import Guide -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-info-circle"></i> Panduan Import</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info" style="background: #EBF5FF; border: 1px solid #3B82F6; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                            <strong><i class="fas fa-lightbulb"></i> Urutan Import yang Benar:</strong>
+                            <ol style="margin: 0.5rem 0 0 1.5rem;">
+                                <li>Import <strong>Data Modul</strong> terlebih dahulu (file: Kode_Modul.xlsx)</li>
+                                <li>Import <strong>Matrix Mapping</strong> (file: TNA_2026.xlsx)</li>
+                                <li>Import <strong>Data Pegawai</strong> (file: daftar pegawai)</li>
+                            </ol>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                            <div style="background: var(--gray-50); padding: 1.25rem; border-radius: 10px; border-left: 4px solid var(--primary);">
+                                <h5 style="color: var(--primary); margin-bottom: 0.5rem;">
+                                    <i class="fas fa-users"></i> Data Pegawai
+                                </h5>
+                                <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem;">
+                                    <strong>Kolom:</strong> NPP, Nama, Jabatan, Posisi, Unit Kerja, Level
+                                </p>
+                                <p style="font-size: 0.8rem; color: var(--gray-500);">
+                                    File Excel daftar pegawai Bank Sulselbar
+                                </p>
+                            </div>
+                            <div style="background: var(--gray-50); padding: 1.25rem; border-radius: 10px; border-left: 4px solid #10B981;">
+                                <h5 style="color: #10B981; margin-bottom: 0.5rem;">
+                                    <i class="fas fa-book"></i> Data Modul
+                                </h5>
+                                <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem;">
+                                    <strong>File:</strong> Kode_Modul_-Send__1_.xlsx
+                                </p>
+                                <p style="font-size: 0.8rem; color: var(--gray-500);">
+                                    Berisi 193 modul training (kode, nama, kategori, tingkatan)
+                                </p>
+                            </div>
+                            <div style="background: var(--gray-50); padding: 1.25rem; border-radius: 10px; border-left: 4px solid var(--secondary);">
+                                <h5 style="color: var(--secondary); margin-bottom: 0.5rem;">
+                                    <i class="fas fa-project-diagram"></i> Matrix Mapping
+                                </h5>
+                                <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem;">
+                                    <strong>File:</strong> TNA_2026-_Send__1_.xlsx
+                                </p>
+                                <p style="font-size: 0.8rem; color: var(--gray-500);">
+                                    279 jabatan × modul. <strong>X</strong> = Wajib, <strong>XO</strong> = Opsional
+                                </p>
+                            </div>
+                            <div style="background: var(--gray-50); padding: 1.25rem; border-radius: 10px; border-left: 4px solid #6366F1;">
+                                <h5 style="color: #6366F1; margin-bottom: 0.5rem;">
+                                    <i class="fas fa-sitemap"></i> Data Jabatan
+                                </h5>
+                                <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem;">
+                                    <strong>Catatan:</strong> Sudah termasuk dalam Matrix Mapping
+                                </p>
+                                <p style="font-size: 0.8rem; color: var(--gray-500);">
+                                    Import Matrix akan otomatis membuat data jabatan
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Export Page -->
+            <section class="page-section" id="pageExport">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-file-export"></i> Export Report</h3>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                            <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 12px; text-align: center;">
+                                <i class="fas fa-file-excel" style="font-size: 3rem; color: #10B981; margin-bottom: 1rem;"></i>
+                                <h4>Rekap TNA per Unit Kerja</h4>
+                                <p style="font-size: 0.85rem; color: var(--gray-500); margin-bottom: 1rem;">
+                                    Export rekap kebutuhan modul per unit kerja
+                                </p>
+                                <button class="btn btn-success">
+                                    <i class="fas fa-download"></i> Download Excel
+                                </button>
+                            </div>
+                            <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 12px; text-align: center;">
+                                <i class="fas fa-file-excel" style="font-size: 3rem; color: #10B981; margin-bottom: 1rem;"></i>
+                                <h4>Rekap TNA per Modul</h4>
+                                <p style="font-size: 0.85rem; color: var(--gray-500); margin-bottom: 1rem;">
+                                    Export rekap jumlah kebutuhan per modul
+                                </p>
+                                <button class="btn btn-success">
+                                    <i class="fas fa-download"></i> Download Excel
+                                </button>
+                            </div>
+                            <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 12px; text-align: center;">
+                                <i class="fas fa-file-pdf" style="font-size: 3rem; color: #EF4444; margin-bottom: 1rem;"></i>
+                                <h4>Laporan Summary TNA</h4>
+                                <p style="font-size: 0.85rem; color: var(--gray-500); margin-bottom: 1rem;">
+                                    Export laporan summary TNA 2026
+                                </p>
+                                <button class="btn btn-primary">
+                                    <i class="fas fa-download"></i> Download PDF
+                                </button>
+                            </div>
+                            <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 12px; text-align: center;">
+                                <i class="fas fa-file-excel" style="font-size: 3rem; color: #10B981; margin-bottom: 1rem;"></i>
+                                <h4>Data Submission Lengkap</h4>
+                                <p style="font-size: 0.85rem; color: var(--gray-500); margin-bottom: 1rem;">
+                                    Export semua data submission pegawai
+                                </p>
+                                <button class="btn btn-success">
+                                    <i class="fas fa-download"></i> Download Excel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Page -->
+            <section class="page-section" id="pageSettings">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-cog"></i> Pengaturan Periode TNA</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Periode TNA</label>
+                                <input type="text" class="form-control" value="2026" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Status Pengisian</label>
+                                <select class="form-control form-select">
+                                    <option value="open">Dibuka</option>
+                                    <option value="closed">Ditutup</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Tanggal Mulai</label>
+                                <input type="date" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tanggal Selesai</label>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-save"></i> Simpan Pengaturan
+                        </button>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-database"></i> Firebase Configuration</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">API Key</label>
+                            <input type="password" class="form-control" placeholder="Masukkan Firebase API Key">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Project ID</label>
+                            <input type="text" class="form-control" placeholder="Masukkan Firebase Project ID">
+                        </div>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plug"></i> Test Connection
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Initialize Firebase with Excel Data -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-rocket"></i> Inisialisasi Data Firebase</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info" style="background: #EBF5FF; border: 1px solid #3B82F6; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                            <strong><i class="fas fa-info-circle"></i> Data Tersedia</strong>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+                                Data dari file Excel sudah di-embed dalam aplikasi:<br>
+                                • <strong id="countModul">193</strong> modul (31 soft + 162 technical)<br>
+                                • <strong id="countJabatan">442</strong> jabatan dengan mapping modul
+                            </p>
+                        </div>
+                        
+                        <p style="color: var(--gray-600); font-size: 0.9rem; margin-bottom: 1rem;">
+                            Klik tombol di bawah untuk mengupload semua data modul dan jabatan ke Firebase. 
+                            Proses ini hanya perlu dilakukan <strong>sekali</strong> saat pertama kali setup.
+                        </p>
+                        
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="initializeFirebaseData('modul')">
+                                <i class="fas fa-book"></i> Upload Data Modul
+                            </button>
+                            <button class="btn btn-success" onclick="initializeFirebaseData('jabatan')">
+                                <i class="fas fa-sitemap"></i> Upload Data Jabatan
+                            </button>
+                            <button class="btn btn-primary" onclick="initializeFirebaseData('all')">
+                                <i class="fas fa-database"></i> Upload Semua Data
+                            </button>
+                        </div>
+                        
+                        <div id="initProgress" style="display: none; margin-top: 1.5rem;">
+                            <div class="progress-bar" style="background: var(--gray-200); border-radius: 8px; height: 8px; overflow: hidden;">
+                                <div id="initProgressBar" style="background: var(--success); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                            </div>
+                            <p id="initProgressText" style="text-align: center; margin-top: 0.5rem; font-size: 0.85rem; color: var(--gray-600);"></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal Add Pegawai -->
+    <div class="modal-overlay" id="modalAddPegawai">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Tambah Pegawai</h3>
+                <button class="modal-close" onclick="closeModal('modalAddPegawai')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">NPP <span style="color: var(--danger);">*</span></label>
+                        <input type="text" class="form-control" id="inputNPP" placeholder="Masukkan NPP">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nama Lengkap <span style="color: var(--danger);">*</span></label>
+                        <input type="text" class="form-control" id="inputNama" placeholder="Masukkan nama lengkap">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Jabatan <span style="color: var(--danger);">*</span></label>
+                    <select class="form-control form-select" id="inputJabatan">
+                        <option value="">Pilih Jabatan</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Posisi</label>
+                        <input type="text" class="form-control" id="inputPosisi" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Level</label>
+                        <input type="text" class="form-control" id="inputLevel" readonly>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Unit Kerja</label>
+                    <input type="text" class="form-control" id="inputUnitKerja" readonly>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalAddPegawai')">Batal</button>
+                <button class="btn btn-primary" onclick="savePegawai()">
+                    <i class="fas fa-save"></i> Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Import -->
+    <div class="modal-overlay" id="modalImport">
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3>Import Data dari Excel</h3>
+                <button class="modal-close" onclick="closeModal('modalImport')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="file-upload-zone" id="modalDropZone">
+                    <input type="file" id="modalFileInput" accept=".xlsx,.xls,.csv">
+                    <div class="icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <h4>Drag & Drop file Excel di sini</h4>
+                    <p>atau klik untuk memilih file</p>
+                </div>
+                <div id="modalImportPreview" style="display: none;">
+                    <!-- Preview will appear here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modalImport')">Batal</button>
+                <button class="btn btn-success" id="btnConfirmImport" style="display: none;" onclick="confirmModalImport()">
+                    <i class="fas fa-check"></i> Import Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // ===== FIREBASE CONFIGURATION =====
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiwuLzJ8lVBsP9UJ4w6HU2JevCF7K8NNk",
+            authDomain: "tnahumancapital.firebaseapp.com",
+            projectId: "tnahumancapital",
+            storageBucket: "tnahumancapital.firebasestorage.app",
+            messagingSenderId: "618822378444",
+            appId: "1:618822378444:web:8cd59870928bd251613369",
+            measurementId: "G-MR5NEYYE07"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // ===== DEMO MODE =====
+        const DEMO_MODE = false; // Production mode - menggunakan Firebase
+
+        // Demo Data
+        const demoData = {
+            pegawai: [
+                { npp: "12345", nama: "Muhammad Yuzar", jabatan: "Analis Perencanaan Strategis", posisi: "Analis", unit_kerja: "KP SIMO", level: "L1 Off" },
+                { npp: "12346", nama: "Ahmad Fauzi", jabatan: "Pemimpin Departemen Perencanaan", posisi: "PimDep", unit_kerja: "KP SIMO", level: "L3" },
+                { npp: "12347", nama: "Siti Rahmah", jabatan: "Analis SDM", posisi: "Analis", unit_kerja: "KP HC", level: "L1 Off" },
+                { npp: "12348", nama: "Budi Santoso", jabatan: "Pemimpin Divisi HC", posisi: "PimDiv", unit_kerja: "KP HC", level: "L4" },
+                { npp: "12349", nama: "Dewi Anggraini", jabatan: "Teller", posisi: "Asisten Ops", unit_kerja: "Cabang Makassar", level: "L1" },
+            ],
+            submissions: [
+                { npp: "12345", nama: "Muhammad Yuzar", jabatan: "Analis Perencanaan Strategis", unit_kerja: "KP SIMO", modul_count: 15, status: "submitted", updated_at: "2024-01-15T10:30:00" },
+                { npp: "12346", nama: "Ahmad Fauzi", jabatan: "Pemimpin Departemen Perencanaan", unit_kerja: "KP SIMO", modul_count: 20, status: "draft", updated_at: "2024-01-14T14:20:00" },
+                { npp: "12347", nama: "Siti Rahmah", jabatan: "Analis SDM", unit_kerja: "KP HC", modul_count: 12, status: "submitted", updated_at: "2024-01-13T09:15:00" },
+            ],
+            modul: [
+                { kode: "CCLM-01", nama: "Dasar-Dasar Perbankan", kategori: "CCLM", tingkatan: "Basic", kebutuhan: 150 },
+                { kode: "CCLM-02", nama: "Budaya Perusahaan", kategori: "CCLM", tingkatan: "Basic", kebutuhan: 145 },
+                { kode: "DCLM-01", nama: "High Achievement Motivation", kategori: "DCLM", tingkatan: "Basic", kebutuhan: 120 },
+                { kode: "TCLM-REN-01", nama: "Corporate Strategy", kategori: "REN", tingkatan: "Advance", kebutuhan: 45 },
+                { kode: "TCLM-MRB-01", nama: "Dasar-Dasar Manajemen Risiko", kategori: "MRB", tingkatan: "Basic", kebutuhan: 98 },
+            ],
+            jabatan: [
+                { no_outline: "A.1", nama: "Pemimpin Divisi Corporate Secretary", posisi: "PimDiv", lokasi: "KP Corsec", level: "L4", modul_soft: 30, modul_tech: 20 },
+                { no_outline: "A.1.1", nama: "Pemimpin Departemen Kesekretariatan", posisi: "PimDep", lokasi: "KP Corsec", level: "L3", modul_soft: 29, modul_tech: 13 },
+                { no_outline: "B.1", nama: "Pemimpin Divisi SIMO", posisi: "PimDiv", lokasi: "KP SIMO", level: "L4", modul_soft: 30, modul_tech: 40 },
+            ]
+        };
+
+        // ===== UTILITY FUNCTIONS =====
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-exclamation-circle'}"></i>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('id-ID', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        }
+
+        // ===== NAVIGATION =====
+        function navigateTo(page) {
+            // Update nav
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.page === page);
+            });
+
+            // Update page
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
+
+            // Update title
+            const titles = {
+                dashboard: ['Dashboard', 'Selamat datang di TNA Admin Bank Sulselbar'],
+                submissions: ['Submissions', 'Kelola data pengisian TNA pegawai'],
+                pegawai: ['Data Pegawai', 'Kelola master data pegawai'],
+                jabatan: ['Data Jabatan', 'Kelola master data jabatan'],
+                modul: ['Data Modul', 'Kelola master data modul pelatihan'],
+                mapping: ['Mapping Matrix', 'Kelola mapping jabatan vs modul'],
+                import: ['Import Excel', 'Import data dari file Excel'],
+                export: ['Export Report', 'Export laporan TNA'],
+                settings: ['Pengaturan', 'Konfigurasi sistem TNA']
+            };
+
+            document.getElementById('pageTitle').textContent = titles[page][0];
+            document.getElementById('pageSubtitle').textContent = titles[page][1];
+
+            // Load data for page
+            loadPageData(page);
+        }
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => navigateTo(item.dataset.page));
+        });
+
+        // ===== LOAD DATA =====
+        async function loadPageData(page) {
+            switch(page) {
+                case 'dashboard':
+                    await loadDashboard();
+                    break;
+                case 'submissions':
+                    await loadSubmissions();
+                    break;
+                case 'pegawai':
+                    await loadPegawai();
+                    break;
+                case 'jabatan':
+                    await loadJabatan();
+                    break;
+                case 'modul':
+                    await loadModul();
+                    break;
+            }
+        }
+
+        async function loadDashboard() {
+            if (DEMO_MODE) {
+                // Update stats
+                document.getElementById('statTotalPegawai').textContent = demoData.pegawai.length;
+                document.getElementById('statSubmitted').textContent = demoData.submissions.filter(s => s.status === 'submitted').length;
+                document.getElementById('statPending').textContent = demoData.pegawai.length - demoData.submissions.length;
+                document.getElementById('statTotalModul').textContent = demoData.modul.length;
+                
+                const submitPercent = Math.round((demoData.submissions.filter(s => s.status === 'submitted').length / demoData.pegawai.length) * 100);
+                document.getElementById('submitPercent').textContent = submitPercent + '%';
+                document.getElementById('submissionBadge').textContent = demoData.submissions.length;
+
+                // Load recent submissions
+                const tbody = document.getElementById('recentSubmissions');
+                tbody.innerHTML = demoData.submissions.slice(0, 5).map(sub => `
+                    <tr>
+                        <td>
+                            <div class="name-cell">
+                                <div class="avatar">${getInitials(sub.nama)}</div>
+                                <span>${sub.nama}</span>
+                            </div>
+                        </td>
+                        <td>${sub.jabatan}</td>
+                        <td>${sub.unit_kerja}</td>
+                        <td><strong>${sub.modul_count}</strong> modul</td>
+                        <td>
+                            <span class="status-pill ${sub.status === 'submitted' ? 'success' : 'warning'}">
+                                <i class="fas ${sub.status === 'submitted' ? 'fa-check' : 'fa-clock'}"></i>
+                                ${sub.status === 'submitted' ? 'Submitted' : 'Draft'}
+                            </span>
+                        </td>
+                        <td>${formatDate(sub.updated_at)}</td>
+                    </tr>
+                `).join('');
+
+                // Load top modules
+                const modulTbody = document.getElementById('topModules');
+                modulTbody.innerHTML = demoData.modul.map(mod => `
+                    <tr>
+                        <td><strong>${mod.kode}</strong></td>
+                        <td>${mod.nama}</td>
+                        <td>${mod.kategori}</td>
+                        <td>
+                            <span class="status-pill ${mod.tingkatan === 'Basic' ? 'info' : mod.tingkatan === 'Intermediate' ? 'warning' : 'danger'}">
+                                ${mod.tingkatan}
+                            </span>
+                        </td>
+                        <td><strong>${mod.kebutuhan}</strong> pegawai</td>
+                    </tr>
+                `).join('');
+
+                // Initialize charts
+                initCharts();
+            }
+        }
+
+        async function loadSubmissions() {
+            const tbody = document.getElementById('submissionsTable');
+            tbody.innerHTML = demoData.submissions.map(sub => `
+                <tr>
+                    <td><input type="checkbox"></td>
+                    <td>
+                        <div class="name-cell">
+                            <div class="avatar">${getInitials(sub.nama)}</div>
+                            <span>${sub.nama}</span>
+                        </div>
+                    </td>
+                    <td>${sub.npp}</td>
+                    <td>${sub.jabatan}</td>
+                    <td>${sub.unit_kerja}</td>
+                    <td>L1 Off</td>
+                    <td><strong>${sub.modul_count}</strong></td>
+                    <td>
+                        <span class="status-pill ${sub.status === 'submitted' ? 'success' : 'warning'}">
+                            ${sub.status === 'submitted' ? 'Submitted' : 'Draft'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn view"><i class="fas fa-eye"></i></button>
+                            <button class="action-btn edit"><i class="fas fa-edit"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadPegawai() {
+            const tbody = document.getElementById('pegawaiTable');
+            tbody.innerHTML = demoData.pegawai.map(peg => `
+                <tr>
+                    <td><strong>${peg.npp}</strong></td>
+                    <td>
+                        <div class="name-cell">
+                            <div class="avatar">${getInitials(peg.nama)}</div>
+                            <span>${peg.nama}</span>
+                        </div>
+                    </td>
+                    <td>${peg.jabatan}</td>
+                    <td>${peg.posisi}</td>
+                    <td>${peg.unit_kerja}</td>
+                    <td><span class="status-pill info">${peg.level}</span></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn view"><i class="fas fa-eye"></i></button>
+                            <button class="action-btn edit"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadJabatan() {
+            const tbody = document.getElementById('jabatanTable');
+            tbody.innerHTML = demoData.jabatan.map(jab => `
+                <tr>
+                    <td><strong>${jab.no_outline}</strong></td>
+                    <td>${jab.nama}</td>
+                    <td>${jab.posisi}</td>
+                    <td>${jab.lokasi}</td>
+                    <td><span class="status-pill info">${jab.level}</span></td>
+                    <td><strong>${jab.modul_soft}</strong></td>
+                    <td><strong>${jab.modul_tech}</strong></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn view"><i class="fas fa-eye"></i></button>
+                            <button class="action-btn edit"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadModul() {
+            const tbody = document.getElementById('modulTable');
+            tbody.innerHTML = demoData.modul.map(mod => `
+                <tr>
+                    <td><strong>${mod.kode}</strong></td>
+                    <td>${mod.nama}</td>
+                    <td>${mod.kategori}</td>
+                    <td>
+                        <span class="status-pill ${mod.tingkatan === 'Basic' ? 'info' : mod.tingkatan === 'Intermediate' ? 'warning' : 'danger'}">
+                            ${mod.tingkatan}
+                        </span>
+                    </td>
+                    <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn view"><i class="fas fa-eye"></i></button>
+                            <button class="action-btn edit"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // ===== CHARTS =====
+        function initCharts() {
+            // Unit Kerja Chart
+            const ctxUnit = document.getElementById('chartUnitKerja').getContext('2d');
+            new Chart(ctxUnit, {
+                type: 'bar',
+                data: {
+                    labels: ['KP SIMO', 'KP HC', 'KP TI', 'KP Kredit', 'Cab Makassar'],
+                    datasets: [{
+                        label: 'Sudah Submit',
+                        data: [15, 12, 8, 10, 5],
+                        backgroundColor: '#10B981',
+                        borderRadius: 6
+                    }, {
+                        label: 'Belum Submit',
+                        data: [5, 3, 7, 5, 10],
+                        backgroundColor: '#F59E0B',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true }
+                    }
+                }
+            });
+
+            // Status Chart
+            const ctxStatus = document.getElementById('chartStatus').getContext('2d');
+            new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sudah Submit', 'Draft', 'Belum Mengisi'],
+                    datasets: [{
+                        data: [45, 20, 35],
+                        backgroundColor: ['#10B981', '#F59E0B', '#E2E8F0'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // ===== MODAL =====
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // ===== FILE UPLOAD & EXCEL PARSER =====
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length) handleFile(files[0]);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFile(e.target.files[0]);
+        });
+
+        let importedData = null;
+
+        function handleFile(file) {
+            showLoading();
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // Get first sheet
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    
+                    importedData = {
+                        sheets: workbook.SheetNames,
+                        data: jsonData,
+                        workbook: workbook
+                    };
+
+                    showImportPreview(jsonData);
+                    hideLoading();
+                } catch (error) {
+                    console.error('Error parsing file:', error);
+                    showToast('Gagal membaca file. Pastikan format file benar.', 'error');
+                    hideLoading();
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function showImportPreview(data) {
+            const dropZone = document.getElementById('dropZone');
+            const preview = document.getElementById('importPreview');
+            const previewTable = document.getElementById('previewTable');
+            const summary = document.getElementById('importSummary');
+
+            dropZone.style.display = 'none';
+            preview.style.display = 'block';
+
+            // Show summary
+            const rowCount = data.length - 1; // minus header
+            const colCount = data[0] ? data[0].length : 0;
+            
+            summary.innerHTML = `
+                <div class="summary-item">
+                    <div class="value">${rowCount}</div>
+                    <div class="label">Total Baris</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value">${colCount}</div>
+                    <div class="label">Total Kolom</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value">${importedData.sheets.length}</div>
+                    <div class="label">Total Sheet</div>
+                </div>
+            `;
+
+            // Show preview table (first 10 rows)
+            const previewData = data.slice(0, 11);
+            let tableHtml = '<table class="data-table"><thead><tr>';
+            
+            // Header
+            if (previewData[0]) {
+                previewData[0].forEach(cell => {
+                    tableHtml += `<th>${cell || ''}</th>`;
+                });
+            }
+            tableHtml += '</tr></thead><tbody>';
+            
+            // Body
+            previewData.slice(1).forEach(row => {
+                tableHtml += '<tr>';
+                row.forEach(cell => {
+                    tableHtml += `<td>${cell || ''}</td>`;
+                });
+                tableHtml += '</tr>';
+            });
+            
+            tableHtml += '</tbody></table>';
+            if (data.length > 11) {
+                tableHtml += `<p style="text-align: center; color: var(--gray-500); margin-top: 1rem;">... dan ${data.length - 11} baris lainnya</p>`;
+            }
+            
+            previewTable.innerHTML = tableHtml;
+        }
+
+        function cancelImport() {
+            document.getElementById('dropZone').style.display = 'block';
+            document.getElementById('importPreview').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            importedData = null;
+        }
+
+        async function confirmImport() {
+            if (!importedData) return;
+            
+            showLoading();
+            
+            try {
+                // Get active import type
+                const activeTab = document.querySelector('.tab-btn[data-import].active');
+                const importType = activeTab ? activeTab.dataset.import : 'pegawai';
+                
+                let savedCount = 0;
+                
+                if (DEMO_MODE) {
+                    // Simulate saving
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    savedCount = importedData.data.length - 1;
+                } else {
+                    // Production - Save to Firebase based on type
+                    if (importType === 'modul') {
+                        savedCount = await importModul(importedData);
+                    } else if (importType === 'jabatan' || importType === 'matrix') {
+                        savedCount = await importJabatanMatrix(importedData);
+                    } else if (importType === 'pegawai') {
+                        savedCount = await importPegawai(importedData);
+                    }
+                }
+                
+                showToast(`Berhasil import ${savedCount} data!`, 'success');
+                cancelImport();
+                
+                // Reload page data
+                loadPageData(importType);
+                
+            } catch (error) {
+                console.error('Import error:', error);
+                showToast('Gagal import data: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Import Modul dari Kode_Modul.xlsx
+        async function importModul(importedData) {
+            const data = importedData.data;
+            const headers = data[0];
+            const rows = data.slice(1).filter(row => row[0]); // Filter empty rows
+            
+            let savedCount = 0;
+            const batch = db.batch();
+            
+            for (const row of rows) {
+                // Map columns: Kode, Nama Modul, Kategori, Tingkatan, Tujuan
+                const kode = String(row[0] || '').trim();
+                if (!kode) continue;
+                
+                const modul = {
+                    kode: kode,
+                    nama: String(row[1] || '').trim(),
+                    kategori: String(row[2] || '').trim(),
+                    tingkatan: String(row[3] || 'Basic').trim(),
+                    tujuan: String(row[4] || '').trim(),
+                    jenis: kode.startsWith('C') || kode.startsWith('D') ? 'soft' : 'technical',
+                    created_at: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                const ref = db.collection('modul').doc(kode);
+                batch.set(ref, modul, { merge: true });
+                savedCount++;
+            }
+            
+            await batch.commit();
+            return savedCount;
+        }
+
+        // Import Jabatan + Matrix dari TNA_2026.xlsx
+        async function importJabatanMatrix(importedData) {
+            const workbook = importedData.workbook;
+            let totalSaved = 0;
+            
+            // Process Sheet 1 (Soft Competency) dan Sheet 2 (Technical Competency)
+            for (let sheetIndex = 0; sheetIndex < workbook.SheetNames.length && sheetIndex < 2; sheetIndex++) {
+                const sheetName = workbook.SheetNames[sheetIndex];
+                const sheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                
+                if (jsonData.length < 2) continue;
+                
+                const headerRow = jsonData[0];
+                const dataRows = jsonData.slice(1).filter(row => row[0]); // Filter empty rows
+                
+                // Find modul columns (after fixed columns: No, Jabatan, Posisi, Lokasi, Level)
+                const fixedCols = 5; // No Outline, Nama Jabatan, Posisi, Lokasi, Level
+                const modulCodes = headerRow.slice(fixedCols).filter(code => code);
+                
+                const jenis = sheetIndex === 0 ? 'soft' : 'technical';
+                
+                for (const row of dataRows) {
+                    const noOutline = String(row[0] || '').trim();
+                    const namaJabatan = String(row[1] || '').trim();
+                    
+                    if (!noOutline || !namaJabatan) continue;
+                    
+                    // Create unique jabatan ID
+                    const jabatanId = noOutline.replace(/\./g, '-');
+                    
+                    // Collect modul wajib (X) dan opsional (XO)
+                    const modulWajib = [];
+                    const modulOpsional = [];
+                    
+                    for (let i = 0; i < modulCodes.length; i++) {
+                        const value = String(row[fixedCols + i] || '').trim().toUpperCase();
+                        const kodeModul = String(modulCodes[i]).trim();
+                        
+                        if (value === 'X') {
+                            modulWajib.push(kodeModul);
+                        } else if (value === 'XO') {
+                            modulOpsional.push(kodeModul);
+                        }
+                    }
+                    
+                    // Get or create jabatan document
+                    const jabatanRef = db.collection('jabatan').doc(jabatanId);
+                    const jabatanDoc = await jabatanRef.get();
+                    
+                    let jabatanData = {
+                        no_outline: noOutline,
+                        nama_jabatan: namaJabatan,
+                        posisi: String(row[2] || '').trim(),
+                        lokasi: String(row[3] || '').trim(),
+                        level: String(row[4] || '').trim(),
+                        updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    if (jabatanDoc.exists) {
+                        // Update existing - merge modul arrays
+                        const existing = jabatanDoc.data();
+                        if (jenis === 'soft') {
+                            jabatanData.modul_soft_wajib = modulWajib;
+                            jabatanData.modul_soft_opsional = modulOpsional;
+                            jabatanData.modul_tech_wajib = existing.modul_tech_wajib || [];
+                            jabatanData.modul_tech_opsional = existing.modul_tech_opsional || [];
+                        } else {
+                            jabatanData.modul_soft_wajib = existing.modul_soft_wajib || [];
+                            jabatanData.modul_soft_opsional = existing.modul_soft_opsional || [];
+                            jabatanData.modul_tech_wajib = modulWajib;
+                            jabatanData.modul_tech_opsional = modulOpsional;
+                        }
+                    } else {
+                        // New document
+                        jabatanData.created_at = firebase.firestore.FieldValue.serverTimestamp();
+                        if (jenis === 'soft') {
+                            jabatanData.modul_soft_wajib = modulWajib;
+                            jabatanData.modul_soft_opsional = modulOpsional;
+                            jabatanData.modul_tech_wajib = [];
+                            jabatanData.modul_tech_opsional = [];
+                        } else {
+                            jabatanData.modul_soft_wajib = [];
+                            jabatanData.modul_soft_opsional = [];
+                            jabatanData.modul_tech_wajib = modulWajib;
+                            jabatanData.modul_tech_opsional = modulOpsional;
+                        }
+                    }
+                    
+                    await jabatanRef.set(jabatanData, { merge: true });
+                    totalSaved++;
+                }
+            }
+            
+            return totalSaved;
+        }
+
+        // Import Pegawai
+        async function importPegawai(importedData) {
+            const data = importedData.data;
+            const headers = data[0].map(h => String(h || '').toLowerCase().replace(/\s+/g, '_'));
+            const rows = data.slice(1).filter(row => row[0]); // Filter empty rows
+            
+            let savedCount = 0;
+            const batch = db.batch();
+            
+            // Find column indices
+            const nppIdx = headers.findIndex(h => h.includes('npp') || h.includes('nik'));
+            const namaIdx = headers.findIndex(h => h.includes('nama'));
+            const jabatanIdx = headers.findIndex(h => h.includes('jabatan'));
+            const posisiIdx = headers.findIndex(h => h.includes('posisi'));
+            const unitIdx = headers.findIndex(h => h.includes('unit') || h.includes('divisi'));
+            const levelIdx = headers.findIndex(h => h.includes('level'));
+            const lokasiIdx = headers.findIndex(h => h.includes('lokasi') || h.includes('cabang'));
+            
+            for (const row of rows) {
+                const npp = String(row[nppIdx] || '').trim();
+                if (!npp) continue;
+                
+                const pegawai = {
+                    npp: npp,
+                    nama: String(row[namaIdx] || '').trim(),
+                    jabatan: String(row[jabatanIdx] || '').trim(),
+                    posisi: posisiIdx >= 0 ? String(row[posisiIdx] || '').trim() : '',
+                    unit_kerja: unitIdx >= 0 ? String(row[unitIdx] || '').trim() : '',
+                    level: levelIdx >= 0 ? String(row[levelIdx] || '').trim() : '',
+                    lokasi: lokasiIdx >= 0 ? String(row[lokasiIdx] || '').trim() : '',
+                    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                const ref = db.collection('pegawai').doc(npp);
+                batch.set(ref, pegawai, { merge: true });
+                savedCount++;
+                
+                // Commit batch every 400 records to avoid limits
+                if (savedCount % 400 === 0) {
+                    await batch.commit();
+                }
+            }
+            
+            await batch.commit();
+            return savedCount;
+        }
+
+        // ===== SIDEBAR TOGGLE =====
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+
+        // ===== INIT =====
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+        });
+
+        // Tab handlers for import
+        document.querySelectorAll('.tab-btn[data-import]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn[data-import]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Export function
+        function exportSubmissions() {
+            showToast('Fitur export akan segera tersedia', 'warning');
+        }
+
+        function savePegawai() {
+            showToast('Data pegawai berhasil disimpan!', 'success');
+            closeModal('modalAddPegawai');
+        }
+
+        // ===== INITIALIZE FIREBASE WITH EMBEDDED DATA =====
+        async function initializeFirebaseData(type) {
+            if (DEMO_MODE) {
+                showToast('Demo Mode aktif. Tidak bisa upload ke Firebase.', 'warning');
+                return;
+            }
+
+            // Check if data is available
+            if (typeof MODUL_DATA === 'undefined' || typeof JABATAN_DATA === 'undefined') {
+                showToast('Data tidak tersedia. Pastikan file tna-data.js dimuat.', 'error');
+                return;
+            }
+
+            // Update counts
+            document.getElementById('countModul').textContent = MODUL_DATA.length;
+            document.getElementById('countJabatan').textContent = JABATAN_DATA.length;
+
+            // Show progress
+            const progressDiv = document.getElementById('initProgress');
+            const progressBar = document.getElementById('initProgressBar');
+            const progressText = document.getElementById('initProgressText');
+            progressDiv.style.display = 'block';
+            progressBar.style.width = '0%';
+
+            try {
+                if (type === 'modul' || type === 'all') {
+                    progressText.textContent = 'Mengupload data modul...';
+                    await uploadModulToFirebase(progressBar, progressText);
+                }
+
+                if (type === 'jabatan' || type === 'all') {
+                    progressText.textContent = 'Mengupload data jabatan...';
+                    await uploadJabatanToFirebase(progressBar, progressText);
+                }
+
+                progressBar.style.width = '100%';
+                progressText.textContent = 'Selesai!';
+                showToast('Data berhasil diupload ke Firebase!', 'success');
+
+            } catch (error) {
+                console.error('Initialize error:', error);
+                showToast('Gagal upload data: ' + error.message, 'error');
+            }
+        }
+
+        async function uploadModulToFirebase(progressBar, progressText) {
+            const total = MODUL_DATA.length;
+            let uploaded = 0;
+            const batchSize = 400;
+
+            for (let i = 0; i < total; i += batchSize) {
+                const batch = db.batch();
+                const chunk = MODUL_DATA.slice(i, Math.min(i + batchSize, total));
+
+                chunk.forEach(modul => {
+                    const ref = db.collection('modul').doc(modul.kode);
+                    batch.set(ref, {
+                        kode: modul.kode,
+                        kode_full: modul.kode_full || modul.kode,
+                        nama: modul.nama,
+                        kategori: modul.kategori,
+                        tingkatan: modul.tingkatan,
+                        tujuan: modul.tujuan || '',
+                        jenis: modul.jenis,
+                        created_at: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+
+                await batch.commit();
+                uploaded += chunk.length;
+                const percent = Math.round((uploaded / total) * 50);
+                progressBar.style.width = percent + '%';
+                progressText.textContent = `Modul: ${uploaded}/${total} (${percent}%)`;
+            }
+        }
+
+        async function uploadJabatanToFirebase(progressBar, progressText) {
+            const total = JABATAN_DATA.length;
+            let uploaded = 0;
+            const batchSize = 400;
+
+            for (let i = 0; i < total; i += batchSize) {
+                const batch = db.batch();
+                const chunk = JABATAN_DATA.slice(i, Math.min(i + batchSize, total));
+
+                chunk.forEach(jabatan => {
+                    const jabId = jabatan.no_outline.replace(/\./g, '-');
+                    const ref = db.collection('jabatan').doc(jabId);
+                    batch.set(ref, {
+                        no_outline: jabatan.no_outline,
+                        nama_jabatan: jabatan.nama_jabatan,
+                        posisi: jabatan.posisi || '',
+                        lokasi: jabatan.lokasi || '',
+                        level: jabatan.level || '',
+                        modul_soft_wajib: jabatan.modul_soft_wajib || [],
+                        modul_soft_opsional: jabatan.modul_soft_opsional || [],
+                        modul_tech_wajib: jabatan.modul_tech_wajib || [],
+                        modul_tech_opsional: jabatan.modul_tech_opsional || [],
+                        created_at: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+
+                await batch.commit();
+                uploaded += chunk.length;
+                const percent = 50 + Math.round((uploaded / total) * 50);
+                progressBar.style.width = percent + '%';
+                progressText.textContent = `Jabatan: ${uploaded}/${total} (${percent}%)`;
+            }
+        }
+    </script>
+</body>
+</html>
